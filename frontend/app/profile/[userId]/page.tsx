@@ -1,57 +1,46 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { usersApi, activityApi } from '@/lib/api';
-import { ActivityData, Attempt } from '@/lib/types';
+import { usersApi, activityApi, showsApi } from '@/lib/api';
+import { ActivityData, Attempt, Show } from '@/lib/types';
 import { useAuth } from '@/lib/auth-context';
-import { Flame, Trophy, BookOpen, Calendar, ChevronRight } from 'lucide-react';
 
-// Correct GitHub-style heatmap:
-// 1. Builds a full week-column grid
-// 2. Places month labels at the exact column where each month starts
+// ===== GitHub-style Heatmap =====
 function ActivityHeatmap({ activity, year }: { activity: Record<string, number>; year: string }) {
-    const CELL = 13; // px
-    const GAP = 3;   // px
+    const CELL = 12;
+    const GAP = 3;
     const STEP = CELL + GAP;
-    const DAY_LABEL_W = 30; // px reserved for weekday labels (3 chars)
 
     const startDate = new Date(`${year}-01-01T00:00:00`);
     const endDate = new Date(`${year}-12-31T00:00:00`);
 
-    // Align grid start to Sunday before Jan 1
     const gridStart = new Date(startDate);
     gridStart.setDate(gridStart.getDate() - gridStart.getDay());
 
-    // Build week columns
     const weeks: { date: string; count: number; inYear: boolean }[][] = [];
     let cur = new Date(gridStart);
-
     while (cur <= endDate) {
         const week: { date: string; count: number; inYear: boolean }[] = [];
         for (let d = 0; d < 7; d++) {
-            const dateStr = cur.toISOString().split('T')[0];
+            const ds = cur.toISOString().split('T')[0];
             const inYear = cur >= startDate && cur <= endDate;
-            week.push({ date: dateStr, count: activity[dateStr] || 0, inYear });
+            week.push({ date: ds, count: activity[ds] || 0, inYear });
             cur.setDate(cur.getDate() + 1);
         }
         weeks.push(week);
     }
 
-    // Calculate which week column each month starts at
-    const monthLabels: { label: string; col: number }[] = [];
     const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthLabels: { label: string; col: number }[] = [];
     weeks.forEach((week, wi) => {
-        week.forEach((cell, di) => {
+        week.forEach(cell => {
             if (!cell.inYear) return;
             const d = new Date(cell.date + 'T00:00:00');
             if (d.getDate() === 1) {
-                // Only add if not too close to previous label
                 const last = monthLabels[monthLabels.length - 1];
-                if (!last || wi - last.col >= 3) {
-                    monthLabels.push({ label: MONTHS[d.getMonth()], col: wi });
-                }
+                if (!last || wi - last.col >= 3) monthLabels.push({ label: MONTHS[d.getMonth()], col: wi });
             }
         });
     });
@@ -59,119 +48,146 @@ function ActivityHeatmap({ activity, year }: { activity: Record<string, number>;
     const getColor = (count: number, inYear: boolean) => {
         if (!inYear) return 'transparent';
         if (count === 0) return 'rgba(255,255,255,0.06)';
-        if (count === 1) return 'rgba(99,102,241,0.35)';
-        if (count === 2) return 'rgba(99,102,241,0.55)';
-        if (count <= 4) return 'rgba(99,102,241,0.78)';
-        return '#6366f1';
+        if (count === 1) return 'rgba(255,107,53,0.25)';
+        if (count === 2) return 'rgba(255,107,53,0.45)';
+        if (count <= 4) return 'rgba(255,107,53,0.70)';
+        return '#ff6b35';
     };
-
-    const gridWidth = weeks.length * STEP - GAP;
 
     return (
         <div style={{ overflowX: 'auto', paddingBottom: '4px' }}>
-            {/* Month labels — absolutely positioned over the correct column */}
-            <div style={{ position: 'relative', height: '18px', marginLeft: DAY_LABEL_W + 4 }}>
+            {/* Month row */}
+            <div style={{ position: 'relative', height: '16px', marginLeft: '34px', marginBottom: '4px' }}>
                 {monthLabels.map(({ label, col }) => (
-                    <span
-                        key={label}
-                        style={{
-                            position: 'absolute',
-                            left: col * STEP,
-                            fontSize: '10px',
-                            fontWeight: '600',
-                            color: 'var(--text-muted)',
-                            whiteSpace: 'nowrap',
-                        }}
-                    >
+                    <span key={label} style={{ position: 'absolute', left: col * STEP, fontSize: '10px', fontWeight: '700', color: '#4a5e4a', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
                         {label}
                     </span>
                 ))}
             </div>
-
-            {/* Grid */}
-            <div style={{ display: 'flex', gap: '0' }}>
-                {/* Weekday labels: all 7 days */}
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: GAP,
-                        marginRight: '4px',
-                        width: DAY_LABEL_W,
-                        flexShrink: 0,
-                    }}
-                >
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((label, i) => (
-                        <div
-                            key={i}
-                            style={{
-                                height: CELL,
-                                fontSize: '9px',
-                                color: 'var(--text-muted)',
-                                fontWeight: '600',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'flex-end',
-                                paddingRight: '4px',
-                            }}
-                        >
-                            {label}
+            <div style={{ display: 'flex', gap: 0 }}>
+                {/* Day labels */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: GAP, marginRight: '4px', width: '30px', flexShrink: 0 }}>
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((l, i) => (
+                        <div key={i} style={{ height: CELL, fontSize: '8px', color: '#4a5e4a', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '4px' }}>
+                            {l}
                         </div>
                     ))}
                 </div>
-
                 {/* Week columns */}
                 <div style={{ display: 'flex', gap: GAP }}>
                     {weeks.map((week, wi) => (
                         <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: GAP }}>
                             {week.map((cell, di) => (
-                                <div
-                                    key={di}
-                                    title={cell.inYear ? `${cell.date}: ${cell.count} quiz${cell.count !== 1 ? 'zes' : ''}` : ''}
-                                    style={{
-                                        width: CELL,
-                                        height: CELL,
-                                        borderRadius: '2px',
-                                        backgroundColor: getColor(cell.count, cell.inYear),
-                                        transition: 'background-color 0.2s',
-                                        flexShrink: 0,
-                                        cursor: cell.inYear && cell.count > 0 ? 'default' : 'default',
-                                    }}
-                                />
+                                <div key={di} title={cell.inYear ? `${cell.date}: ${cell.count} quiz${cell.count !== 1 ? 'zes' : ''}` : ''}
+                                    style={{ width: CELL, height: CELL, borderRadius: '2px', backgroundColor: getColor(cell.count, cell.inYear), flexShrink: 0 }} />
                             ))}
                         </div>
                     ))}
                 </div>
             </div>
-
             {/* Legend */}
-            <div
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    marginTop: '10px',
-                    justifyContent: 'flex-end',
-                }}
-            >
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Less</span>
-                {[false, 1, 2, 3, 5].map((v, i) => (
-                    <div
-                        key={i}
-                        style={{
-                            width: 11, height: 11, borderRadius: '2px',
-                            backgroundColor: v === false
-                                ? 'rgba(255,255,255,0.06)'
-                                : getColor(v as number, true),
-                        }}
-                    />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '10px', justifyContent: 'flex-end' }}>
+                <span style={{ fontSize: '10px', color: '#4a5e4a', fontWeight: '700', textTransform: 'uppercase' }}>Less</span>
+                {[0, 1, 2, 3, 5].map((v, i) => (
+                    <div key={i} style={{ width: 10, height: 10, borderRadius: '2px', backgroundColor: getColor(v, true) }} />
                 ))}
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>More</span>
+                <span style={{ fontSize: '10px', color: '#4a5e4a', fontWeight: '700', textTransform: 'uppercase' }}>More</span>
             </div>
         </div>
     );
 }
 
+// ===== Sidebar =====
+function Sidebar({ username, level, xpToNext }: { username: string; level: number; xpToNext: number }) {
+    const navItems = [
+        { href: '/', icon: '⊞', label: 'Dashboard', active: false },
+        { href: '/', icon: '🎬', label: 'Shows', active: false },
+        { href: '/leaderboard', icon: '🏆', label: 'Leaderboard', active: false },
+        { href: '/forum', icon: '💬', label: 'Discussions', active: false },
+        { href: '#', icon: '👤', label: 'Profile', active: true },
+    ];
+
+    return (
+        <aside style={{
+            width: '256px', flexShrink: 0,
+            borderRight: '1px solid rgba(255,107,53,0.1)',
+            background: '#0f1a0f',
+            display: 'flex', flexDirection: 'column',
+            height: '100vh', position: 'sticky', top: 0,
+        }}>
+            {/* Logo */}
+            <div style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                    width: '40px', height: '40px', borderRadius: '10px',
+                    background: '#ff6b35',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '18px', boxShadow: '0 0 16px rgba(255,107,53,0.4)',
+                }}>
+                    ⚡
+                </div>
+                <div>
+                    <h1 style={{ fontSize: '18px', fontWeight: '900', color: '#ff6b35', letterSpacing: '-0.5px' }}>LeetFlix</h1>
+                    <p style={{ fontSize: '11px', color: 'rgba(255,107,53,0.5)', fontWeight: '600' }}>Premium Member</p>
+                </div>
+            </div>
+
+            {/* Nav */}
+            <nav style={{ flex: 1, padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                {navItems.map(item => (
+                    <Link key={item.label} href={item.href}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '12px',
+                            padding: '12px 16px', borderRadius: '12px',
+                            textDecoration: 'none',
+                            background: item.active ? 'rgba(255,107,53,0.1)' : 'transparent',
+                            color: item.active ? '#ff6b35' : '#4a7a4a',
+                            border: item.active ? '1px solid rgba(255,107,53,0.2)' : '1px solid transparent',
+                            fontSize: '14px', fontWeight: '700',
+                            transition: 'all 0.18s',
+                        }}
+                        onMouseEnter={(e) => { if (!item.active) { e.currentTarget.style.background = 'rgba(255,107,53,0.05)'; e.currentTarget.style.color = '#ff6b35'; } }}
+                        onMouseLeave={(e) => { if (!item.active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#4a7a4a'; } }}
+                    >
+                        <span style={{ fontSize: '16px' }}>{item.icon}</span>
+                        {item.label}
+                    </Link>
+                ))}
+            </nav>
+
+            {/* Level bar + Go Pro */}
+            <div style={{ padding: '16px' }}>
+                <div style={{
+                    background: 'rgba(255,107,53,0.05)', backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,107,53,0.2)', borderRadius: '14px', padding: '16px',
+                }}>
+                    <p style={{ fontSize: '11px', fontWeight: '900', color: '#ff6b35', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>
+                        Level {level}
+                    </p>
+                    {/* XP bar */}
+                    <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: '75%', background: '#ff6b35', boxShadow: '0 0 8px rgba(255,107,53,0.6)', borderRadius: '999px' }} />
+                    </div>
+                    <p style={{ fontSize: '10px', color: '#4a5e4a', marginTop: '8px' }}>{xpToNext.toLocaleString()} XP until next rank</p>
+                </div>
+                <button style={{
+                    width: '100%', marginTop: '12px', padding: '12px',
+                    borderRadius: '12px', border: 'none',
+                    background: '#ff6b35', color: '#0f1a0f',
+                    fontWeight: '900', fontSize: '14px', cursor: 'pointer',
+                    boxShadow: '0 0 16px rgba(255,107,53,0.3)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                    transition: 'filter 0.2s',
+                }}
+                    onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; }}>
+                    ⚡ Go Pro
+                </button>
+            </div>
+        </aside>
+    );
+}
+
+// ===== Main component =====
 export default function ProfilePage() {
     const params = useParams();
     const userId = params.userId as string;
@@ -179,184 +195,283 @@ export default function ProfilePage() {
 
     const [profile, setProfile] = useState<any>(null);
     const [activityData, setActivityData] = useState<ActivityData | null>(null);
+    const [shows, setShows] = useState<Show[]>([]);
     const [loading, setLoading] = useState(true);
     const [year, setYear] = useState(new Date().getFullYear().toString());
 
     const isOwn = currentUser?.id === userId;
+    const currentYear = new Date().getFullYear();
 
     useEffect(() => {
         Promise.all([
             isOwn ? usersApi.getMe() : usersApi.getProfile(userId),
             activityApi.get(userId, year),
+            showsApi.getAll(),
         ])
-            .then(([profileRes, actRes]) => {
+            .then(([profileRes, actRes, showsRes]) => {
                 setProfile(profileRes.data);
                 setActivityData(actRes.data);
+                setShows(showsRes.data);
             })
             .catch(() => { })
             .finally(() => setLoading(false));
     }, [userId, year, isOwn]);
 
-    if (loading) {
-        return (
-            <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 24px' }}>
-                <div className="skeleton" style={{ height: '220px', borderRadius: '16px', marginBottom: '24px' }} />
-                <div className="skeleton" style={{ height: '160px', borderRadius: '16px' }} />
+    const recommendedShow = useMemo(() => shows.find(s => s.seasons && s.seasons.length > 0) || shows[0], [shows]);
+
+    if (loading) return (
+        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+            <div style={{ width: '256px', background: '#0f1a0f', flexShrink: 0 }} />
+            <div style={{ flex: 1, padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className="skeleton" style={{ height: '60px', borderRadius: '12px' }} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                    {[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: '120px', borderRadius: '12px' }} />)}
+                </div>
+                <div className="skeleton" style={{ height: '220px', borderRadius: '12px' }} />
             </div>
-        );
-    }
+        </div>
+    );
 
-    if (!profile) return <div style={{ textAlign: 'center', padding: '80px', color: 'var(--text-muted)' }}>User not found</div>;
+    if (!profile) return <div style={{ textAlign: 'center', padding: '80px', color: '#4a5e4a' }}>User not found</div>;
 
-    const currentYear = new Date().getFullYear();
+    const totalScore = profile.totalScore || 0;
+    const quizzesAttempted = profile.quizzesAttempted || 0;
+    const streak = activityData?.streak ?? 0;
+    const level = Math.max(1, Math.floor(totalScore / 1000));
+    const accuracy = quizzesAttempted > 0 ? Math.round(((profile.totalCorrect || 0) / (quizzesAttempted * 10)) * 100) : 0;
 
     return (
-        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 24px' }}>
-            {/* Profile header */}
-            <div
-                className="glass"
-                style={{
-                    padding: '32px',
-                    marginBottom: '24px',
-                    background: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(34,211,238,0.04))',
-                }}
-            >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                    {/* Avatar */}
-                    <div
-                        style={{
-                            width: '80px',
-                            height: '80px',
-                            borderRadius: '50%',
-                            background: `linear-gradient(135deg, hsl(${userId.charCodeAt(0) * 10}, 65%, 45%), hsl(${userId.charCodeAt(1) * 10}, 65%, 55%))`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '32px',
-                            fontWeight: '800',
-                            color: 'white',
-                            flexShrink: 0,
-                            boxShadow: '0 0 20px rgba(99,102,241,0.3)',
-                        }}
-                    >
-                        {profile.username.charAt(0).toUpperCase()}
+        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#0f1a0f' }}>
+            <Sidebar username={profile.username} level={level} xpToNext={2450} />
+
+            {/* Main content */}
+            <main style={{ flex: 1, overflowY: 'auto', position: 'relative', background: '#0f1a0f' }}>
+
+                {/* ===== STICKY TOP BAR ===== */}
+                <header style={{
+                    position: 'sticky', top: 0, zIndex: 30,
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '16px 32px',
+                    background: 'rgba(255,107,53,0.03)', backdropFilter: 'blur(16px)',
+                    borderBottom: '1px solid rgba(255,107,53,0.08)',
+                }}>
+                    {/* Search */}
+                    <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#4a5e4a', fontSize: '16px' }}>🔍</span>
+                        <input
+                            type="text"
+                            placeholder="Search shows, challenges, or peers..."
+                            style={{
+                                width: '100%', padding: '10px 16px 10px 38px',
+                                background: 'rgba(255,255,255,0.04)',
+                                border: '1px solid rgba(255,107,53,0.1)',
+                                borderRadius: '12px', color: 'var(--text-primary)',
+                                fontSize: '13px', outline: 'none',
+                                fontFamily: 'inherit',
+                            }}
+                            onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(255,107,53,0.35)'; }}
+                            onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,107,53,0.1)'; }}
+                        />
                     </div>
-
-                    <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                            <h1 style={{ fontSize: '26px', fontWeight: '900' }}>{profile.username}</h1>
-                            {profile.role === 'admin' && (
-                                <span className="badge badge-yellow" style={{ fontSize: '11px' }}>👑 Admin</span>
-                            )}
-                            {isOwn && (
-                                <span className="badge badge-accent" style={{ fontSize: '11px' }}>You</span>
-                            )}
+                    {/* Right controls */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        {streak > 0 && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '10px', background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.2)' }}>
+                                <span style={{ fontSize: '15px' }}>🔥</span>
+                                <span style={{ color: '#ff6b35', fontWeight: '800', fontSize: '13px' }}>{streak} Days</span>
+                            </div>
+                        )}
+                        <div style={{ width: '1px', height: '36px', background: 'rgba(255,107,53,0.1)' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ textAlign: 'right' }}>
+                                <p style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-primary)' }}>{profile.username}</p>
+                                <p style={{ fontSize: '10px', color: '#ff6b35', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                                    {profile.role === 'admin' ? 'Admin' : 'Gold Tier'}
+                                </p>
+                            </div>
+                            <div style={{
+                                width: '40px', height: '40px', borderRadius: '50%',
+                                background: 'linear-gradient(135deg, #ff6b35, #8b5cf6)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '18px', fontWeight: '900', color: 'white',
+                                border: '2px solid #ff6b35', boxShadow: '0 0 12px rgba(255,107,53,0.3)',
+                                flexShrink: 0,
+                            }}>
+                                {profile.username.charAt(0).toUpperCase()}
+                            </div>
                         </div>
-                        <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                            Member since {new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                        </p>
                     </div>
-                </div>
+                </header>
 
-                {/* Stats */}
-                <div
-                    style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-                        gap: '16px',
-                        marginTop: '28px',
-                    }}
-                >
-                    {[
-                        { icon: <Trophy size={18} color="var(--accent-yellow)" />, label: 'Total Score', value: (profile.totalScore || 0).toLocaleString() },
-                        { icon: <BookOpen size={18} color="var(--accent-cyan)" />, label: 'Quizzes Done', value: profile.quizzesAttempted || 0 },
-                        { icon: <Flame size={18} color="var(--accent-red)" />, label: 'Current Streak', value: `${activityData?.streak ?? 0}d` },
-                        { icon: <Calendar size={18} color="var(--accent-green)" />, label: 'Active Days', value: activityData?.totalDays ?? 0 },
-                    ].map((stat) => (
-                        <div key={stat.label} className="stat-card" style={{ textAlign: 'center' }}>
-                            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>{stat.icon}</div>
-                            <p style={{ fontSize: '24px', fontWeight: '900', marginBottom: '2px' }}>{stat.value}</p>
-                            <p style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{stat.label}</p>
-                        </div>
-                    ))}
-                </div>
-            </div>
+                {/* ===== CONTENT ===== */}
+                <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
-            {/* Activity heatmap */}
-            <div className="glass" style={{ padding: '28px', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ fontSize: '18px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Calendar size={18} color="var(--accent-green)" />
-                        Activity
-                    </h2>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                        {[currentYear - 1, currentYear].map((y) => (
-                            <button
-                                key={y}
-                                onClick={() => setYear(y.toString())}
-                                style={{
-                                    padding: '4px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700',
-                                    border: '1px solid var(--border)',
-                                    background: year === y.toString() ? 'var(--accent)' : 'transparent',
-                                    color: year === y.toString() ? 'white' : 'var(--text-secondary)',
-                                    cursor: 'pointer', transition: 'all 0.2s',
-                                }}
+                    {/* ===== 3 STAT CARDS ===== */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                        {[
+                            { icon: '🏅', label: 'Total Score', value: totalScore.toLocaleString(), badge: '+12%', badgeColor: '#ff6b35' },
+                            { icon: '🌐', label: 'Global Rank', value: `#${Math.max(1, 5000 - totalScore).toLocaleString()}`, badge: 'Top 5%', badgeColor: '#ff6b35' },
+                            { icon: '🎯', label: 'Accuracy', value: `${accuracy}%`, badge: `Avg: ${accuracy}%`, badgeColor: '#4a5e4a' },
+                        ].map(stat => (
+                            <div key={stat.label} style={{
+                                background: 'rgba(255,107,53,0.03)',
+                                border: '1px solid rgba(255,107,53,0.1)',
+                                borderRadius: '14px', padding: '24px',
+                                transition: 'border-color 0.2s',
+                            }}
+                                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,107,53,0.3)'; }}
+                                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,107,53,0.1)'; }}
                             >
-                                {y}
-                            </button>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                                    <span style={{ fontSize: '22px', padding: '8px', background: 'rgba(255,107,53,0.1)', borderRadius: '8px' }}>{stat.icon}</span>
+                                    <span style={{ fontSize: '11px', fontWeight: '800', color: stat.badgeColor, background: stat.badgeColor === '#ff6b35' ? 'rgba(255,107,53,0.1)' : 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: '6px' }}>
+                                        {stat.badge}
+                                    </span>
+                                </div>
+                                <p style={{ fontSize: '13px', color: '#4a5e4a', fontWeight: '600', marginBottom: '4px' }}>{stat.label}</p>
+                                <h3 style={{ fontSize: '30px', fontWeight: '900', letterSpacing: '-1px', color: 'var(--text-primary)' }}>{stat.value}</h3>
+                            </div>
                         ))}
                     </div>
-                </div>
 
-                {activityData ? (
-                    <ActivityHeatmap activity={activityData.activity} year={year} />
-                ) : (
-                    <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '32px' }}>
-                        No activity data yet
+                    {/* ===== HEATMAP + RECOMMENDED ===== */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: '24px' }}>
+
+                        {/* Heatmap */}
+                        <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                <h2 style={{ fontSize: '18px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ color: '#ff6b35' }}>📅</span> Binge Activity
+                                </h2>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '10px', color: '#4a5e4a', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                    <span>Less</span>
+                                    {[0, 1, 2, 3, 5].map((v, i) => (
+                                        <div key={i} style={{ width: 12, height: 12, borderRadius: '2px', background: v === 0 ? 'rgba(255,255,255,0.06)' : `rgba(255,107,53,${[0.25, 0.45, 0.70, 1][Math.min(i - 1, 3)]})` }} />
+                                    ))}
+                                    <span>More</span>
+                                </div>
+                            </div>
+                            <div style={{ background: 'rgba(255,107,53,0.03)', border: '1px solid rgba(255,107,53,0.1)', borderRadius: '14px', padding: '24px', overflowX: 'auto' }}>
+                                {activityData ? (
+                                    <ActivityHeatmap activity={activityData.activity} year={year} />
+                                ) : (
+                                    <div style={{ textAlign: 'center', color: '#4a5e4a', padding: '32px' }}>No activity data yet</div>
+                                )}
+                                {/* Month labels + year switcher */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
+                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                        {[currentYear - 1, currentYear].map(y => (
+                                            <button key={y} onClick={() => setYear(y.toString())} style={{
+                                                padding: '3px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700',
+                                                border: '1px solid rgba(255,107,53,0.2)',
+                                                background: year === y.toString() ? '#ff6b35' : 'transparent',
+                                                color: year === y.toString() ? '#0f1a0f' : '#4a5e4a',
+                                                cursor: 'pointer', transition: 'all 0.2s',
+                                            }}>
+                                                {y}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Recommended show card */}
+                        <div>
+                            <h2 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ color: '#ff6b35' }}>✨</span> Recommended
+                            </h2>
+                            {recommendedShow ? (
+                                <Link href={`/shows/${recommendedShow.slug}`} style={{ textDecoration: 'none', display: 'block' }}>
+                                    <div style={{
+                                        position: 'relative', aspectRatio: '3/4', borderRadius: '16px', overflow: 'hidden',
+                                        border: '1px solid rgba(255,107,53,0.2)', boxShadow: '0 16px 40px rgba(0,0,0,0.4)',
+                                        transition: 'transform 0.25s',
+                                    }}
+                                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.02)'; }}
+                                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; }}>
+                                        {(recommendedShow as any).posterUrl ? (
+                                            <img src={(recommendedShow as any).posterUrl} alt={recommendedShow.name}
+                                                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255,107,53,0.4), rgba(139,92,246,0.4))' }} />
+                                        )}
+                                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0f1a0f 0%, transparent 50%)' }} />
+                                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '20px 16px' }}>
+                                            <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+                                                <span style={{ padding: '2px 7px', borderRadius: '4px', fontSize: '9px', fontWeight: '900', background: '#ff6b35', color: '#0f1a0f', textTransform: 'uppercase', letterSpacing: '0.5px' }}>New Quiz</span>
+                                            </div>
+                                            <h3 style={{ fontWeight: '900', color: 'white', fontSize: '15px', lineHeight: 1.25, textTransform: 'uppercase', letterSpacing: '-0.3px', marginBottom: '10px' }}>
+                                                {recommendedShow.name}
+                                            </h3>
+                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                <div style={{ flex: 1, padding: '8px', borderRadius: '8px', background: '#ff6b35', color: '#0f1a0f', fontWeight: '900', fontSize: '12px', textAlign: 'center' }}>
+                                                    ▶ Play Now
+                                                </div>
+                                                <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '16px' }}>
+                                                    +
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ) : (
+                                <div style={{ aspectRatio: '3/4', borderRadius: '16px', background: 'rgba(255,107,53,0.05)', border: '1px solid rgba(255,107,53,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a5e4a', fontSize: '14px' }}>
+                                    No shows yet
+                                </div>
+                            )}
+                        </div>
                     </div>
-                )}
-            </div>
 
-            {/* Recent attempts */}
-            {isOwn && profile.recentAttempts && profile.recentAttempts.length > 0 && (
-                <div className="glass" style={{ padding: '0', overflow: 'hidden' }}>
-                    <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
-                        <h2 style={{ fontSize: '18px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <BookOpen size={18} color="var(--accent-cyan)" />
-                            Recent Attempts
+                    {/* ===== RECENT MISSIONS ===== */}
+                    <div>
+                        <h2 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ color: '#ff6b35' }}>🕐</span> Recent Missions
                         </h2>
+                        <div style={{ background: 'rgba(255,107,53,0.03)', border: '1px solid rgba(255,107,53,0.1)', borderRadius: '14px', overflow: 'hidden' }}>
+                            {profile.recentAttempts && profile.recentAttempts.length > 0 ? (
+                                <div>
+                                    {profile.recentAttempts.map((attempt: Attempt, i: number) => (
+                                        <Link key={attempt.id} href={`/results/${attempt.id}`}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                padding: '16px 20px', textDecoration: 'none',
+                                                borderBottom: i < profile.recentAttempts.length - 1 ? '1px solid rgba(255,107,53,0.06)' : 'none',
+                                                transition: 'background 0.2s',
+                                            }}
+                                            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,107,53,0.05)'; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(255,107,53,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>
+                                                    🎬
+                                                </div>
+                                                <div>
+                                                    <p style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-primary)', marginBottom: '2px' }}>
+                                                        Quiz — {attempt.score}/{attempt.total} correct
+                                                    </p>
+                                                    <p style={{ fontSize: '12px', color: '#4a5e4a' }}>
+                                                        {new Date(attempt.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <p style={{ color: '#ff6b35', fontWeight: '900', fontSize: '14px', marginBottom: '2px' }}>+{attempt.score * 10} XP</p>
+                                                <p style={{ fontSize: '10px', color: '#4a5e4a', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{attempt.percentage}% accuracy</p>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={{ padding: '40px', textAlign: 'center', color: '#4a5e4a' }}>
+                                    <p style={{ fontSize: '15px', marginBottom: '6px' }}>No missions completed yet</p>
+                                    <Link href="/" style={{ color: '#ff6b35', fontWeight: '700', textDecoration: 'none', fontSize: '13px' }}>Browse Shows →</Link>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    {profile.recentAttempts.map((attempt: Attempt, i: number) => (
-                        <Link
-                            key={attempt.id}
-                            href={`/results/${attempt.id}`}
-                            style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                padding: '16px 24px',
-                                borderBottom: i < profile.recentAttempts.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                                textDecoration: 'none', transition: 'background 0.2s',
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
-                            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                        >
-                            <div>
-                                <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '2px' }}>
-                                    {attempt.score}/{attempt.total} correct
-                                </p>
-                                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                                    {new Date(attempt.completedAt).toLocaleDateString()}
-                                </p>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <span className={`badge ${attempt.percentage >= 80 ? 'badge-green' : attempt.percentage >= 50 ? 'badge-yellow' : 'badge-red'}`}>
-                                    {attempt.percentage}%
-                                </span>
-                                <ChevronRight size={16} color="var(--text-muted)" />
-                            </div>
-                        </Link>
-                    ))}
+
                 </div>
-            )}
+            </main>
         </div>
     );
 }

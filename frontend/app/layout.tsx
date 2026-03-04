@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
-import Navbar from '@/components/Navbar';
+import ConditionalNavbar from '@/components/ConditionalNavbar';
 
 export const metadata: Metadata = {
   title: 'LeetFlix – Gamified TV Quiz Platform',
@@ -18,8 +18,8 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <Navbar />
-          <main style={{ minHeight: 'calc(100vh - 64px)' }}>{children}</main>
+          <ConditionalNavbar />
+          <main>{children}</main>
         </AuthProvider>
       </body>
     </html>

@@ -129,7 +129,7 @@ export default function HomePage() {
               </span>
             </div>
 
-            <h1 style={{ fontSize: 'clamp(56px,9vw,100px)', fontWeight: '900', lineHeight: 0.88, letterSpacing: '-3px', color: 'white', marginBottom: '24px' }}>
+            <h1 style={{ fontSize: 'clamp(56px,9vw,100px)', fontWeight: '900', lineHeight: 1.0, letterSpacing: '-3px', color: 'white', marginBottom: '24px', paddingBottom: '8px' }}>
               Level Up Your{' '}
               <span style={{ fontStyle: 'italic', background: 'linear-gradient(90deg, #ff6b35, #c084fc, #39ff14)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 Binge
