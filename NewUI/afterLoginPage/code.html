@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#38ff14",
+                        "background-light": "#f6f8f5",
+                        "background-dark": "#12230f",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<title>The Binary Protocol - LeetFlix</title>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<!-- Navigation Bar -->
+<header class="sticky top-0 z-50 flex items-center justify-between border-b border-primary/10 bg-background-dark/80 backdrop-blur-md px-6 py-3 lg:px-20">
+<div class="flex items-center gap-4">
+<div class="text-primary">
+<svg class="size-8" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-xl font-extrabold tracking-tighter text-slate-100">LEETFLIX</h2>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center bg-primary/10 rounded-full px-4 py-1.5 border border-primary/20">
+<span class="material-symbols-outlined text-primary text-sm mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm text-slate-100 placeholder:text-slate-400 w-48" placeholder="Search challenges..." type="text"/>
+</div>
+<div class="flex items-center gap-3">
+<button class="p-2 text-slate-300 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="size-9 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center overflow-hidden">
+<img alt="User Avatar" class="size-full object-cover" data-alt="User profile avatar illustration" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0JHkb7tG2nVI5oHKqAHfHGwGU0xDPQ6s3Ugv3lbsn3a2T0wwJkmlA0Ids6lZCiWgyhKoyYR5EJZRk-widlTWlOBYVHWxsUrPvIoKy9haWu7m12_-N4tdT6aV1XH76XUSpQi99n7AaSrmZCOgf_Ti8e8XTjxnAXFyoQeYMcvVfCNfZTrtv63cfCkqOoYuJWasBCQ8k8dtv_whNo1CfT6fQVSPS6kuGXkUb-_cUXF0LNslNIWIjYBQ8xYIXqRSXDh-ETCu83YmHhbk"/>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1">
+<!-- Hero Banner -->
+<section class="relative h-[60vh] md:h-[75vh] w-full overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105" data-alt="Futuristic cyber security data center background" style="background-image: linear-gradient(to top, #12230f 0%, transparent 40%, rgba(18,35,15,0.4) 100%), url('https://lh3.googleusercontent.com/aida-public/AB6AXuCjpb0eoMZxp82viYj_Gen__gU5mpdnRqXf7oNqGicEVS7hQjVO1Ac1zsb5dryHtthM0-muOFTuA1iPWh13A1rxMNleSay0WZgPhzUe26UrybePY0Sz6rTGX2p1J5HS4c1ZWx-sbcGIS7NAVrXW5hCTxLhz2LMqMCH1bp-ijE9Kq4ldLjHDHqsh1VYL1nm0irsZ7IDgLQV8LD4l6MAeWw9SOixSCUnMAEn_e3UCmFuhVrdhN0oGoHurCu4tKR6QLsSG2GW24WRtu-Y');">
+</div>
+<div class="absolute inset-0 flex flex-col justify-end px-6 pb-12 lg:px-20 lg:pb-24">
+<div class="max-w-3xl space-y-4">
+<div class="flex items-center gap-2">
+<span class="bg-primary/20 text-primary border border-primary px-2 py-0.5 rounded text-xs font-bold uppercase tracking-widest">Premium Original</span>
+<span class="text-slate-300 text-sm font-medium">98% Match for you</span>
+</div>
+<h1 class="text-5xl md:text-7xl font-black tracking-tight text-white uppercase italic">The Binary Protocol</h1>
+<p class="text-slate-200 text-lg md:text-xl max-w-2xl leading-relaxed">
+                            Master the core of computational thinking. From logic gates to complex assembly instructions, decrypt the secrets of the machine.
+                        </p>
+<div class="flex flex-wrap gap-4 pt-4">
+<button class="flex items-center gap-2 bg-primary text-background-dark font-bold px-8 py-3 rounded-lg hover:brightness-110 transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined fill-1">play_arrow</span>
+                                Resume S1:E4
+                            </button>
+<button class="flex items-center gap-2 bg-slate-100/10 backdrop-blur-md text-white border border-slate-100/20 font-bold px-8 py-3 rounded-lg hover:bg-slate-100/20 transition-all">
+<span class="material-symbols-outlined">add</span>
+                                My List
+                            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Seasons Section -->
+<section class="px-6 py-12 lg:px-20">
+<div class="flex items-end justify-between mb-8 border-b border-primary/10 pb-4">
+<div>
+<h2 class="text-3xl font-bold text-white tracking-tight">Available Seasons</h2>
+<p class="text-slate-400 mt-1">Challenge yourself with 4 progressive difficulty tiers.</p>
+</div>
+<div class="hidden md:flex gap-2 text-slate-400">
+<button class="p-2 border border-slate-800 rounded-full hover:bg-primary/10 hover:text-primary transition-all">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="p-2 border border-slate-800 rounded-full hover:bg-primary/10 hover:text-primary transition-all">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Season Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Season 1 -->
+<div class="group flex flex-col bg-slate-900/40 rounded-xl overflow-hidden border border-slate-800 hover:border-primary/50 transition-all">
+<div class="relative aspect-[3/4] overflow-hidden">
+<img class="size-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Code on a screen season 1 cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrXID4fFhG3t5znC7zKZrx5eSB85pE1Pr68l1SOx12GK4BNPCMbVdoftCwz_SvcM_t4qWUtwm5UgE6vZmNl45rh5emrO-dcFK84ElyO8Dvf7IizaLbK1akGww20vCob9-N5ICJisSUyDZ8aHy2nRq2qLlWvYZOe_tfJHYeWLJISbe3A9YxcYHmvb_xOwbn5mO6WiSE_QlpD_Q3nMOgqMWf01Qk3-rFjYsy0rOYehk19XH00z0BAx5qDuiwh1dEPYg-GoEU5A5kN8I"/>
+<div class="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-primary border border-primary/30 uppercase tracking-tighter">Fundamentals</div>
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent opacity-60"></div>
+</div>
+<div class="p-5 flex-1 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold text-white">Season 1</h3>
+<div class="text-primary font-bold">82%</div>
+</div>
+<div class="space-y-3 mb-6">
+<div class="flex items-center gap-2 text-slate-400 text-sm">
+<span class="material-symbols-outlined text-sm">quiz</span>
+<span>50 Questions</span>
+</div>
+<div class="flex items-center gap-2 text-slate-400 text-sm">
+<span class="material-symbols-outlined text-sm">signal_cellular_alt</span>
+<span class="text-yellow-500">Medium</span>
+</div>
+<div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[82%]"></div>
+</div>
+</div>
+<button class="mt-auto w-full py-2.5 bg-primary/10 hover:bg-primary text-primary hover:text-background-dark font-bold rounded-lg border border-primary/20 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">play_circle</span>
+                                Start Quiz
+                            </button>
+</div>
+</div>
+<!-- Season 2 -->
+<div class="group flex flex-col bg-slate-900/40 rounded-xl overflow-hidden border border-slate-800 hover:border-primary/50 transition-all">
+<div class="relative aspect-[3/4] overflow-hidden">
+<img class="size-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Microchip circuitry season 2 cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAWJKsm6El4k6MI9dw9wQz-1Z9IwJXsFtn-piixlm7tlJcSOQwW43CLawIobXAJQhFl1-AWAg3fnY3Qk0g2g1QuoKvvxTPs_ciAdlOoem3PvSodop-R3hnWlXBuaIBDKAnkJLRkxOIytGLVEiFBAtabT8DykdsjXi4zY7zetw2ScpUol8jJ5RLqmMf3-eJat1C_RCuq_AflWu0h41mU5Z32pe685hfFcoDCNzmtUFE5ayI8ND3fgTishg_FcvAcmkZamETw1EuDp0"/>
+<div class="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-primary border border-primary/30 uppercase tracking-tighter">System Architecture</div>
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent opacity-60"></div>
+</div>
+<div class="p-5 flex-1 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold text-white">Season 2</h3>
+<div class="text-primary font-bold">95%</div>
+</div>
+<div class="space-y-3 mb-6">
+<div class="flex items-center gap-2 text-slate-400 text-sm">
+<span class="material-symbols-outlined text-sm">quiz</span>
+<span>45 Questions</span>
+</div>
+<div class="flex items-center gap-2 text-slate-400 text-sm">
+<span class="material-symbols-outlined text-sm">signal_cellular_alt</span>
+<span class="text-orange-500">Hard</span>
+</div>
+<div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[95%]"></div>
+</div>
+</div>
+<button class="mt-auto w-full py-2.5 bg-primary/10 hover:bg-primary text-primary hover:text-background-dark font-bold rounded-lg border border-primary/20 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">play_circle</span>
+                                Start Quiz
+                            </button>
+</div>
+</div>
+<!-- Season 3 -->
+<div class="group flex flex-col bg-slate-900/40 rounded-xl overflow-hidden border border-slate-800 hover:border-primary/50 transition-all">
+<div class="relative aspect-[3/4] overflow-hidden">
+<img class="size-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Encrypted code on screen season 3 cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGXBCQSNQr9OPFAJoukCjqqlXz8Qx_rbTL1nvE-WCgMH-LagHgSSpfj0BKjQnb7ShbhxSwdzPbfIXUaY-ADwW_2EQuAefl3V9YpQ5TUkwLcttBjzcEWTJXAvmr70R-zr_w2DWUCbyGeX2EkujxR8v-Aqm9eB8vvY6ErfwtV2m3_1ZeV0Ijd2Q4c4t2Vjz4YivLtr-G1jup3Ese4NT64ItyrkZrtm53bM2msoQOxYbFuVKs0NfzTRNOegq6yYJ_V-LKWiryiKgbbwI"/>
+<div class="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-primary border border-primary/30 uppercase tracking-tighter">Cryptography</div>
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent opacity-60"></div>
+</div>
+<div class="p-5 flex-1 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold text-white">Season 3</h3>
+<div class="text-slate-500 font-bold">--</div>
+</div>
+<div class="space-y-3 mb-6">
+<div class="flex items-center gap-2 text-slate-400 text-sm">
+<span class="material-symbols-outlined text-sm">quiz</span>
+<span>60 Questions</span>
+</div>
+<div class="flex items-center gap-2 text-slate-400 text-sm">
+<span class="material-symbols-outlined text-sm">signal_cellular_alt</span>
+<span class="text-red-500 font-bold">Insane</span>
+</div>
+<div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-0"></div>
+</div>
+</div>
+<button class="mt-auto w-full py-2.5 bg-primary/10 hover:bg-primary text-primary hover:text-background-dark font-bold rounded-lg border border-primary/20 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">lock</span>
+                                Locked
+                            </button>
+</div>
+</div>
+<!-- Season 4 -->
+<div class="group flex flex-col bg-slate-900/40 rounded-xl overflow-hidden border border-slate-800 hover:border-primary/50 transition-all opacity-75">
+<div class="relative aspect-[3/4] overflow-hidden grayscale group-hover:grayscale-0 transition-all">
+<img class="size-full object-cover" data-alt="Matrix rain digital code season 4 cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWqw04XdlVAF0Xr4K3DBDoyxvQex724qYgXK3WFc8N1SQ6GnGgo_jjxaHiWnewh-R0jJDw8_b4xOf3ZTk7BDH7QwlelT3av2HN4D1adPB2Sw-HSt7gCF4LV43Q0sFBH1hw-MBrVm2My-hm9ppcoyKlSUa65bewdJiCXQ00pm-QulvZsj9Bed2s8MzlWVAHbWLKWWmzq1vCFbtFhxULLvB3VQzocVS91WW5v2irdPZD0vndmI2CUEXxABggwrMTBJr85hE2LaepenM"/>
+<div class="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-primary border border-primary/30 uppercase tracking-tighter">The Deep Web</div>
+<div class="absolute inset-0 bg-background-dark/80 flex items-center justify-center">
+<span class="bg-black/60 px-4 py-2 rounded-full text-white text-xs font-bold uppercase tracking-widest border border-white/10">Coming Soon</span>
+</div>
+</div>
+<div class="p-5 flex-1 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold text-white">Season 4</h3>
+<div class="text-slate-500 font-bold">--</div>
+</div>
+<div class="space-y-3 mb-6">
+<div class="flex items-center gap-2 text-slate-400 text-sm">
+<span class="material-symbols-outlined text-sm">quiz</span>
+<span>?? Questions</span>
+</div>
+<div class="flex items-center gap-2 text-slate-400 text-sm">
+<span class="material-symbols-outlined text-sm">signal_cellular_alt</span>
+<span class="text-slate-500 italic">Unknown</span>
+</div>
+</div>
+<button class="mt-auto w-full py-2.5 bg-slate-800 text-slate-500 font-bold rounded-lg cursor-not-allowed" disabled="">
+                                Not Available
+                            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Details Section -->
+<section class="px-6 py-12 lg:px-20 bg-background-light dark:bg-background-dark/50 grid grid-cols-1 md:grid-cols-3 gap-12">
+<div class="md:col-span-2 space-y-6">
+<h3 class="text-2xl font-bold text-white">About the Protocol</h3>
+<p class="text-slate-300 leading-relaxed text-lg">
+                        Dive deep into the mechanics of computation. This series covers everything from basic Boolean algebra and logic gates to memory management, stack pointers, and low-level kernel interactions. Each season increases the complexity, challenging even the most seasoned engineers.
+                    </p>
+<div class="flex flex-wrap gap-3 pt-2">
+<span class="px-4 py-2 bg-slate-800 text-slate-300 rounded-full text-sm">#ComputerScience</span>
+<span class="px-4 py-2 bg-slate-800 text-slate-300 rounded-full text-sm">#Engineering</span>
+<span class="px-4 py-2 bg-slate-800 text-slate-300 rounded-full text-sm">#CyberSecurity</span>
+<span class="px-4 py-2 bg-slate-800 text-slate-300 rounded-full text-sm">#Algorithm</span>
+</div>
+</div>
+<div class="space-y-6">
+<div>
+<h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Creator</h4>
+<p class="text-white font-medium">Dr. Alan Turing &amp; The Core Team</p>
+</div>
+<div>
+<h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Release Date</h4>
+<p class="text-white font-medium">October 24, 2023</p>
+</div>
+<div>
+<h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Points</h4>
+<p class="text-primary font-bold">4,500 XP Available</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="border-t border-primary/10 py-10 px-6 lg:px-20 text-center text-slate-500 text-sm">
+<div class="flex justify-center gap-8 mb-6">
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-primary transition-colors" href="#">Help Center</a>
+<a class="hover:text-primary transition-colors" href="#">Cookie Preferences</a>
+</div>
+<p>© 2024 LeetFlix Entertainment. All rights reserved.</p>
+</footer>
+</div>
+</body></html>
