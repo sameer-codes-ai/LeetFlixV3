@@ -204,7 +204,7 @@ export default function ProfilePage() {
 
     useEffect(() => {
         Promise.all([
-            isOwn ? usersApi.getMe() : usersApi.getProfile(userId),
+            usersApi.getStats(userId),
             activityApi.get(userId, year),
             showsApi.getAll(),
         ])
@@ -238,7 +238,9 @@ export default function ProfilePage() {
     const quizzesAttempted = profile.quizzesAttempted || 0;
     const streak = activityData?.streak ?? 0;
     const level = Math.max(1, Math.floor(totalScore / 1000));
-    const accuracy = quizzesAttempted > 0 ? Math.round(((profile.totalCorrect || 0) / (quizzesAttempted * 10)) * 100) : 0;
+    const accuracy = profile.recentAttempts && profile.recentAttempts.length > 0
+        ? Math.round(profile.recentAttempts.reduce((acc: number, cur: any) => acc + cur.percentage, 0) / profile.recentAttempts.length)
+        : 0;
 
     return (
         <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#0f1a0f' }}>

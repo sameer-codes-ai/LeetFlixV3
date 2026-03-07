@@ -9,9 +9,22 @@ export class ShowsService {
     async getAllShows() {
         const db = this.firebaseService.getDb();
         const snap = await db.collection('shows').get();
-        return snap.docs
+        const shows = snap.docs
             .map((d) => ({ id: d.id, ...d.data() }))
             .sort((a: any, b: any) => a.name.localeCompare(b.name));
+
+        const seasonsSnap = await db.collection('seasons').get();
+        const seasonsByShowId: Record<string, any[]> = {};
+        seasonsSnap.docs.forEach((doc) => {
+            const data = doc.data();
+            if (!seasonsByShowId[data.showId]) seasonsByShowId[data.showId] = [];
+            seasonsByShowId[data.showId].push({ id: doc.id, ...data });
+        });
+
+        return shows.map((show: any) => ({
+            ...show,
+            seasons: seasonsByShowId[show.id] || []
+        }));
     }
 
     async getShowBySlug(slug: string) {
