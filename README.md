@@ -33,6 +33,11 @@ A premium, full-stack gamified quiz platform designed for TV show enthusiasts. T
 - **Bulk Ingestion**: Intelligent JSON upload tool for mass-importing seasons and questions.
 - **User Management**: Administrative tools to promote users, moderate content, and manage the platform.
 
+### 🤝 Social Network
+- **Follow/Unfollow**: Follow other users directly from their profile page.
+- **Followers & Following**: Clickable count badges open a modal listing all followers or accounts you follow.
+- **Profile Discovery**: Navigate to any followed user's profile to view their stats, level, heatmap, and accuracy.
+
 ---
 
 ## 🛠️ Technological Stack
@@ -45,6 +50,12 @@ A premium, full-stack gamified quiz platform designed for TV show enthusiasts. T
 ---
 
 ## 🚀 Quick Start
+
+### ⚡ One-Click Launch (Windows)
+Double-click **`start.bat`** in the project root. It will:
+1. Open the **backend** in a separate terminal window.
+2. Open the **frontend** in a separate terminal window.
+3. Wait 3 seconds, then open `http://localhost:3000` in your browser automatically.
 
 ### Prerequisites
 - Node.js 18+

@@ -61,4 +61,18 @@ export class UsersService {
             createdAt: user['createdAt'],
         };
     }
+
+    async searchUsers(query: string) {
+        if (!query || query.trim().length === 0) return [];
+        const db = this.firebaseService.getDb();
+        const snap = await db.collection('users').get();
+        const q = query.toLowerCase().trim();
+        return snap.docs
+            .map((d) => {
+                const u = d.data() as Record<string, any>;
+                return { id: d.id, username: u['username'], totalScore: u['totalScore'] || 0 };
+            })
+            .filter((u) => u.username && u.username.toLowerCase().includes(q))
+            .slice(0, 10);
+    }
 }

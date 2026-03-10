@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { usersApi, activityApi, showsApi } from '@/lib/api';
+import { usersApi, activityApi, showsApi, socialApi } from '@/lib/api';
 import { ActivityData, Attempt, Show } from '@/lib/types';
 import { useAuth } from '@/lib/auth-context';
 
@@ -199,6 +199,20 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [year, setYear] = useState(new Date().getFullYear().toString());
 
+    // Social follow state
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followCounts, setFollowCounts] = useState({ followers: 0, following: 0 });
+    const [socialModal, setSocialModal] = useState<null | 'followers' | 'following'>(null);
+    const [socialList, setSocialList] = useState<any[]>([]);
+    const [followLoading, setFollowLoading] = useState(false);
+
+    // User search state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [searchFocused, setSearchFocused] = useState(false);
+    const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+
+
     const isOwn = currentUser?.id === userId;
     const currentYear = new Date().getFullYear();
 
@@ -216,6 +230,42 @@ export default function ProfilePage() {
             .catch(() => { })
             .finally(() => setLoading(false));
     }, [userId, year, isOwn]);
+
+    // Load follow counts and follow status
+    useEffect(() => {
+        socialApi.getCounts(userId).then(r => setFollowCounts(r.data)).catch(() => { });
+        if (currentUser && !isOwn) {
+            socialApi.isFollowing(userId).then(r => setIsFollowing(r.data)).catch(() => { });
+        }
+    }, [userId, currentUser, isOwn]);
+
+    const handleFollowToggle = async () => {
+        if (!currentUser) return;
+        setFollowLoading(true);
+        try {
+            if (isFollowing) {
+                await socialApi.unfollow(userId);
+                setIsFollowing(false);
+                setFollowCounts(c => ({ ...c, followers: Math.max(0, c.followers - 1) }));
+            } else {
+                await socialApi.follow(userId);
+                setIsFollowing(true);
+                setFollowCounts(c => ({ ...c, followers: c.followers + 1 }));
+            }
+        } catch { }
+        setFollowLoading(false);
+    };
+
+    const openSocialModal = async (type: 'followers' | 'following') => {
+        setSocialModal(type);
+        setSocialList([]);
+        try {
+            const res = type === 'followers'
+                ? await socialApi.getFollowers(userId)
+                : await socialApi.getFollowing(userId);
+            setSocialList(res.data);
+        } catch { }
+    };
 
     const recommendedShow = useMemo(() => shows.find(s => s.seasons && s.seasons.length > 0) || shows[0], [shows]);
 
@@ -262,7 +312,20 @@ export default function ProfilePage() {
                         <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#4a5e4a', fontSize: '16px' }}>🔍</span>
                         <input
                             type="text"
-                            placeholder="Search shows, challenges, or peers..."
+                            placeholder="Search users by username..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                const v = e.target.value;
+                                setSearchQuery(v);
+                                if (searchTimeout) clearTimeout(searchTimeout);
+                                if (v.trim().length === 0) { setSearchResults([]); return; }
+                                const t = setTimeout(async () => {
+                                    try { const r = await usersApi.search(v); setSearchResults(r.data); } catch { setSearchResults([]); }
+                                }, 300);
+                                setSearchTimeout(t);
+                            }}
+                            onFocus={() => setSearchFocused(true)}
+                            onBlur={() => { setTimeout(() => setSearchFocused(false), 200); }}
                             style={{
                                 width: '100%', padding: '10px 16px 10px 38px',
                                 background: 'rgba(255,255,255,0.04)',
@@ -271,9 +334,36 @@ export default function ProfilePage() {
                                 fontSize: '13px', outline: 'none',
                                 fontFamily: 'inherit',
                             }}
-                            onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(255,107,53,0.35)'; }}
-                            onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,107,53,0.1)'; }}
                         />
+                        {/* Search results dropdown */}
+                        {searchFocused && searchQuery.trim().length > 0 && (
+                            <div style={{
+                                position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0,
+                                background: '#162418', border: '1px solid rgba(255,107,53,0.2)',
+                                borderRadius: '12px', overflow: 'hidden', boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+                                zIndex: 50, maxHeight: '280px', overflowY: 'auto',
+                            }}>
+                                {searchResults.length === 0 ? (
+                                    <p style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>No users found</p>
+                                ) : searchResults.map((u: any) => (
+                                    <Link
+                                        key={u.id}
+                                        href={`/profile/${u.id}`}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.15s' }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,107,53,0.08)'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                                    >
+                                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg,#ff6b35,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '13px', color: 'white', flexShrink: 0 }}>
+                                            {u.username.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p style={{ fontWeight: '700', fontSize: '13px', color: 'white' }}>{u.username}</p>
+                                            <p style={{ fontSize: '11px', color: '#ff6b35', fontWeight: '600' }}>{u.totalScore?.toLocaleString() || 0} XP</p>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     {/* Right controls */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -282,6 +372,34 @@ export default function ProfilePage() {
                                 <span style={{ fontSize: '15px' }}>🔥</span>
                                 <span style={{ color: '#ff6b35', fontWeight: '800', fontSize: '13px' }}>{streak} Days</span>
                             </div>
+                        )}
+                        {/* Follow counts */}
+                        <button
+                            onClick={() => openSocialModal('followers')}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                            <span style={{ display: 'block', fontWeight: '900', fontSize: '15px', color: 'white' }}>{followCounts.followers}</span>
+                            <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Followers</span>
+                        </button>
+                        <button
+                            onClick={() => openSocialModal('following')}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                            <span style={{ display: 'block', fontWeight: '900', fontSize: '15px', color: 'white' }}>{followCounts.following}</span>
+                            <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Following</span>
+                        </button>
+                        {/* Follow/Unfollow button — only show on other users' profiles */}
+                        {!isOwn && currentUser && (
+                            <button
+                                onClick={handleFollowToggle}
+                                disabled={followLoading}
+                                style={{
+                                    padding: '8px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                                    fontWeight: '800', fontSize: '13px', transition: 'all 0.2s',
+                                    background: isFollowing ? 'rgba(255,255,255,0.08)' : '#ff6b35',
+                                    color: isFollowing ? 'var(--text-secondary)' : '#0f1a0f',
+                                    opacity: followLoading ? 0.6 : 1,
+                                }}>
+                                {followLoading ? '...' : isFollowing ? 'Following ✓' : '+ Follow'}
+                            </button>
                         )}
                         <div style={{ width: '1px', height: '36px', background: 'rgba(255,107,53,0.1)' }} />
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -304,6 +422,44 @@ export default function ProfilePage() {
                         </div>
                     </div>
                 </header>
+
+                {/* ===== SOCIAL MODAL ===== */}
+                {socialModal && (
+                    <div
+                        onClick={() => setSocialModal(null)}
+                        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ background: '#162418', border: '1px solid rgba(255,107,53,0.2)', borderRadius: '16px', padding: '28px', width: '360px', maxHeight: '70vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                <h3 style={{ fontWeight: '900', fontSize: '16px', color: 'white', textTransform: 'capitalize' }}>{socialModal}</h3>
+                                <button onClick={() => setSocialModal(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '20px', lineHeight: 1 }}>✕</button>
+                            </div>
+                            <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {socialList.length === 0 ? (
+                                    <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '24px 0' }}>No users yet</p>
+                                ) : socialList.map((u: any) => (
+                                    <Link
+                                        key={u.id}
+                                        href={`/profile/${u.id}`}
+                                        onClick={() => setSocialModal(null)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', textDecoration: 'none', transition: 'border-color 0.2s' }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,107,53,0.3)'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+                                    >
+                                        <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg,#ff6b35,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '15px', color: 'white', flexShrink: 0 }}>
+                                            {u.username.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p style={{ fontWeight: '700', fontSize: '14px', color: 'white' }}>{u.username}</p>
+                                            <p style={{ fontSize: '12px', color: '#ff6b35', fontWeight: '600' }}>{u.totalScore?.toLocaleString() || 0} XP</p>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* ===== CONTENT ===== */}
                 <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px' }}>

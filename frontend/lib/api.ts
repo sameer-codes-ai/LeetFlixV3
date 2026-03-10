@@ -40,6 +40,7 @@ export const usersApi = {
     getMe: () => api.get('/users/me'),
     getStats: (id: string) => api.get(`/users/${id}/stats`),
     getProfile: (id: string) => api.get(`/users/${id}/profile`),
+    search: (q: string) => api.get(`/users/search?q=${encodeURIComponent(q)}`),
 };
 
 // Shows
@@ -74,6 +75,17 @@ export const activityApi = {
     get: (userId: string, year?: string) =>
         api.get(`/activity/${userId}${year ? `?year=${year}` : ''}`),
 };
+
+// Social (Follow / Followers)
+export const socialApi = {
+    follow: (targetUserId: string) => api.post(`/social/follow/${targetUserId}`, {}),
+    unfollow: (targetUserId: string) => api.delete(`/social/follow/${targetUserId}`),
+    isFollowing: (targetUserId: string) => api.get(`/social/follow/${targetUserId}/status`),
+    getFollowers: (userId: string) => api.get(`/social/${userId}/followers`),
+    getFollowing: (userId: string) => api.get(`/social/${userId}/following`),
+    getCounts: (userId: string) => api.get(`/social/${userId}/counts`),
+};
+
 
 // Forum
 export const forumApi = {

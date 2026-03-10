@@ -10,6 +10,8 @@ import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { ActivityModule } from './activity/activity.module';
 import { ForumModule } from './forum/forum.module';
 import { AdminModule } from './admin/admin.module';
+import { SocialModule } from './social/social.module';
+
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { AdminModule } from './admin/admin.module';
     ActivityModule,
     ForumModule,
     AdminModule,
+    SocialModule,
   ],
 })
 export class AppModule { }

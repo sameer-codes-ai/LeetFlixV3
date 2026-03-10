@@ -2,12 +2,17 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Tv, Trophy, MessageSquare, User, Shield, LogOut, Zap } from 'lucide-react';
 
 export default function Navbar() {
     const { user, logout, isAdmin } = useAuth();
     const [avatarHover, setAvatarHover] = useState(false);
+    // Suppress auth-dependent content until client hydration is complete
+    // to avoid React hydration mismatch (server always has user=null)
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
+
 
     const navLinks = [
         { href: '/', label: 'Shows' },
@@ -77,9 +82,9 @@ export default function Navbar() {
                     )}
                 </div>
 
-                {/* Auth */}
+                {/* Auth — suppressed until client mounts to avoid hydration mismatch */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {user ? (
+                    {mounted && user ? (
                         <>
                             <Link
                                 href={`/profile/${user.id}`}
@@ -93,7 +98,6 @@ export default function Navbar() {
                                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,107,53,0.18)'; }}
                                 onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,107,53,0.1)'; }}
                             >
-                                {/* Avatar circle */}
                                 <div style={{
                                     width: '26px', height: '26px', borderRadius: '50%',
                                     background: `linear-gradient(135deg, #ff6b35, #8b5cf6)`,
@@ -112,20 +116,14 @@ export default function Navbar() {
                                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
                                     fontSize: '13px', transition: 'all 0.2s',
                                 }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.borderColor = 'rgba(248,113,113,0.4)';
-                                    e.currentTarget.style.color = '#f87171';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                                    e.currentTarget.style.color = 'var(--text-secondary)';
-                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(248,113,113,0.4)'; e.currentTarget.style.color = '#f87171'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                             >
                                 <LogOut size={13} />
                                 Out
                             </button>
                         </>
-                    ) : (
+                    ) : mounted ? (
                         <>
                             <Link href="/login" style={{ padding: '7px 16px', textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '14px', fontWeight: '600', transition: 'color 0.2s' }}
                                 onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }}
@@ -137,8 +135,9 @@ export default function Navbar() {
                                 Get Started
                             </Link>
                         </>
-                    )}
+                    ) : null}
                 </div>
+
             </div>
         </nav>
     );
