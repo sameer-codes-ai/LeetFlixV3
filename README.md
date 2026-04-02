@@ -1,4 +1,4 @@
-# LeetFlix V3 🚀
+# LeetFlix V3 🚀 Try : https://leetflixv3.vercel.app/
 
 A premium, full-stack gamified quiz platform designed for TV show enthusiasts. Test your knowledge, track your binge activity, and climb the global leaderboards in a high-octane neon-themed ecosystem.
 
