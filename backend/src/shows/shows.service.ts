@@ -1,19 +1,32 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { FirebaseService } from '../firebase/firebase.service';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ShowsService {
-    constructor(private firebaseService: FirebaseService) { }
+    constructor(
+        private firebaseService: FirebaseService,
+        @Inject(CACHE_MANAGER) private cache: Cache,
+    ) { }
 
     async getAllShows() {
+        // Cache for 2 minutes — this is hit on every page load
+        const cacheKey = 'shows:all';
+        const cached = await this.cache.get<any[]>(cacheKey);
+        if (cached) return cached;
+
         const db = this.firebaseService.getDb();
-        const snap = await db.collection('shows').get();
-        const shows = snap.docs
+        const [showsSnap, seasonsSnap] = await Promise.all([
+            db.collection('shows').get(),
+            db.collection('seasons').get(),
+        ]);
+
+        const shows = showsSnap.docs
             .map((d) => ({ id: d.id, ...d.data() }))
             .sort((a: any, b: any) => a.name.localeCompare(b.name));
 
-        const seasonsSnap = await db.collection('seasons').get();
         const seasonsByShowId: Record<string, any[]> = {};
         seasonsSnap.docs.forEach((doc) => {
             const data = doc.data();
@@ -21,13 +34,20 @@ export class ShowsService {
             seasonsByShowId[data.showId].push({ id: doc.id, ...data });
         });
 
-        return shows.map((show: any) => ({
+        const result = shows.map((show: any) => ({
             ...show,
             seasons: seasonsByShowId[show.id] || []
         }));
+
+        await this.cache.set(cacheKey, result, 120000); // 2 min TTL
+        return result;
     }
 
     async getShowBySlug(slug: string) {
+        const cacheKey = `shows:slug:${slug}`;
+        const cached = await this.cache.get<any>(cacheKey);
+        if (cached) return cached;
+
         const db = this.firebaseService.getDb();
         const snap = await db
             .collection('shows')
@@ -49,7 +69,9 @@ export class ShowsService {
             .map((d) => ({ id: d.id, ...d.data() }))
             .sort((a: any, b: any) => a.order - b.order);
 
-        return { ...show, seasons };
+        const result = { ...show, seasons };
+        await this.cache.set(cacheKey, result, 120000);
+        return result;
     }
 
     async getOrCreateShow(name: string, posterUrl?: string): Promise<string> {
@@ -66,10 +88,14 @@ export class ShowsService {
             .get();
 
         if (!existing.empty) {
-            // Update posterUrl if provided on an existing show
             if (posterUrl) {
                 await existing.docs[0].ref.update({ posterUrl });
             }
+            // Invalidate show caches after update
+            await Promise.all([
+                this.cache.del('shows:all'),
+                this.cache.del(`shows:slug:${slug}`),
+            ]);
             return existing.docs[0].id;
         }
 
@@ -82,12 +108,16 @@ export class ShowsService {
             posterUrl: posterUrl || '',
             createdAt: new Date().toISOString(),
         });
+        // Invalidate shows list cache
+        await this.cache.del('shows:all');
         return id;
     }
 
     async updateShowPoster(showId: string, posterUrl: string): Promise<void> {
         const db = this.firebaseService.getDb();
         await db.collection('shows').doc(showId).update({ posterUrl });
+        // Invalidate caches
+        await this.cache.del('shows:all');
     }
 
     async getOrCreateSeason(showId: string, seasonName: string): Promise<string> {
@@ -115,6 +145,8 @@ export class ShowsService {
             questionCount: 0,
             createdAt: new Date().toISOString(),
         });
+        // Invalidate shows cache (seasons embedded in show data)
+        await this.cache.del('shows:all');
         return id;
     }
 }

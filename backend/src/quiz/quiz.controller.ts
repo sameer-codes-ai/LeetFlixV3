@@ -22,6 +22,12 @@ export class QuizController {
         return this.quizService.getSeasonQuestions(seasonId);
     }
 
+    @Get('show/:showId/all-questions')
+    @UseGuards(JwtAuthGuard)
+    getAllShowQuestions(@Param('showId') showId: string) {
+        return this.quizService.getAllShowQuestions(showId);
+    }
+
     @Post('attempt')
     @UseGuards(JwtAuthGuard)
     submitQuiz(@CurrentUser() user: any, @Body() dto: SubmitQuizDto) {

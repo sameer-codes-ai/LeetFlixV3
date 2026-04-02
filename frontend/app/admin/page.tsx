@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { adminApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { UploadReport } from '@/lib/types';
+import Swal from 'sweetalert2';
 import {
     Shield,
     Upload,
@@ -66,9 +67,35 @@ export default function AdminPage() {
         setUploadError('');
         try {
             const res = await adminApi.uploadQuiz(file);
-            setReport(res.data);
+            const r = res.data as UploadReport;
+            setReport(r);
+            Swal.fire({
+                icon: r.failed > 0 ? 'warning' : 'success',
+                title: r.failed > 0 ? 'Upload Completed with Errors' : 'Upload Successful! 🎉',
+                html: `
+                    <div style="text-align:left;font-size:15px;line-height:2">
+                        <b>Total entries:</b> ${r.total}<br/>
+                        <b style="color:#22c55e">✅ Success:</b> ${r.success}<br/>
+                        ${r.failed > 0 ? `<b style="color:#f87171">❌ Failed:</b> ${r.failed}<br/>` : ''}
+                        ${r.errors?.length ? `<details style="margin-top:8px"><summary style="cursor:pointer;color:#ff6b35">View errors</summary><pre style="font-size:12px;max-height:150px;overflow:auto;background:#111;padding:8px;border-radius:8px;margin-top:4px">${r.errors.map(e => `#${e.index}: ${e.reason}`).join('\n')}</pre></details>` : ''}
+                    </div>
+                `,
+                background: '#162418',
+                color: '#e8f5e8',
+                confirmButtonColor: '#ff6b35',
+                confirmButtonText: 'Got it',
+            });
         } catch (err: any) {
-            setUploadError(err?.response?.data?.message || 'Upload failed. Check your JSON format.');
+            const msg = err?.response?.data?.message || 'Upload failed. Check your JSON format.';
+            setUploadError(msg);
+            Swal.fire({
+                icon: 'error',
+                title: 'Upload Failed',
+                text: msg,
+                background: '#162418',
+                color: '#e8f5e8',
+                confirmButtonColor: '#ff6b35',
+            });
         } finally {
             setUploading(false);
         }

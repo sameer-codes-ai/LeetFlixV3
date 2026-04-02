@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { useState, useEffect } from 'react';
 import { Tv, Trophy, MessageSquare, User, Shield, LogOut, Zap } from 'lucide-react';
+import GlobalSearch from './GlobalSearch';
 
 export default function Navbar() {
     const { user, logout, isAdmin } = useAuth();
@@ -81,6 +82,9 @@ export default function Navbar() {
                         </Link>
                     )}
                 </div>
+
+                {/* Global Search */}
+                <GlobalSearch />
 
                 {/* Auth — suppressed until client mounts to avoid hydration mismatch */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

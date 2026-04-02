@@ -1,39 +1,108 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { FirebaseService } from '../firebase/firebase.service';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { v4 as uuidv4 } from 'uuid';
 
+/** Fisher-Yates (Knuth) in-place shuffle */
+function shuffle<T>(arr: T[]): T[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function sanitizeQuestion(d: FirebaseFirestore.DocumentSnapshot) {
+    const data = d.data() as Record<string, any>;
+    const { answer: _a, ...rest } = data;
+    return { id: d.id, ...rest, options: shuffle(rest.options || []) };
+}
+
 @Injectable()
 export class QuizService {
-    constructor(private firebaseService: FirebaseService) { }
+    constructor(
+        private firebaseService: FirebaseService,
+        @Inject(CACHE_MANAGER) private cache: Cache,
+    ) { }
 
     async getSeasonQuestions(seasonId: string) {
+        const cacheKey = `quiz:season:${seasonId}:structure`; // structure (no shuffled answers)
         const db = this.firebaseService.getDb();
 
+        // Always verify season exists (lightweight single-doc fetch)
         const seasonDoc = await db.collection('seasons').doc(seasonId).get();
         if (!seasonDoc.exists) throw new NotFoundException('Season not found');
 
-        // Single-field filter only — no composite index needed
-        const questionsSnap = await db
-            .collection('questions')
-            .where('seasonId', '==', seasonId)
-            .get();
+        // Fetch questions — cache the raw list, shuffle on the way out
+        let rawQuestions = await this.cache.get<any[]>(cacheKey);
+        if (!rawQuestions) {
+            const questionsSnap = await db
+                .collection('questions')
+                .where('seasonId', '==', seasonId)
+                .get();
+            rawQuestions = questionsSnap.docs.map((d) => {
+                const data = d.data() as Record<string, any>;
+                const { answer: _a, ...rest } = data;
+                return { id: d.id, ...rest };
+            });
+            await this.cache.set(cacheKey, rawQuestions, 300000); // 5 min TTL
+        }
 
-        return questionsSnap.docs.map((d) => {
-            const data = d.data() as Record<string, any>;
-            const { answer: _a, ...question } = data;
-            return { id: d.id, ...question };
+        // Shuffle a fresh copy for each request (so order is always random)
+        return shuffle(rawQuestions.map((q) => ({ ...q, options: shuffle(q.options || []) })));
+    }
+
+    async getAllShowQuestions(showId: string) {
+        const db = this.firebaseService.getDb();
+
+        // Fetch all seasons first
+        const seasonsSnap = await db.collection('seasons').where('showId', '==', showId).get();
+        if (seasonsSnap.empty) throw new NotFoundException('No seasons found for this show');
+
+        const seasonIds = seasonsSnap.docs.map((d) => d.id);
+
+        // Fetch all season question lists in PARALLEL
+        const questionSnaps = await Promise.all(
+            seasonIds.map((sid) =>
+                db.collection('questions').where('seasonId', '==', sid).get(),
+            ),
+        );
+
+        const allQuestions: any[] = [];
+        questionSnaps.forEach((snap) => {
+            snap.docs.forEach((d) => {
+                const data = d.data() as Record<string, any>;
+                const { answer: _a, ...rest } = data;
+                allQuestions.push({ id: d.id, ...rest, options: shuffle(rest.options || []) });
+            });
         });
+
+        return shuffle(allQuestions);
     }
 
     async submitQuiz(userId: string, dto: SubmitQuizDto) {
         const db = this.firebaseService.getDb();
+        const today = new Date().toISOString().split('T')[0];
+        const now = new Date().toISOString();
+        const attemptId = uuidv4();
 
-        const questionsSnap = await db
-            .collection('questions')
-            .where('seasonId', '==', dto.seasonId)
-            .get();
+        // ─── Parallelise all independent reads ──────────────────────────────
+        const isAllSeasons = dto.seasonId === 'all';
 
+        const [questionsSnap, userDoc, activitySnap] = await Promise.all([
+            // For "all" season quizzes, fetch by showId; otherwise by seasonId
+            isAllSeasons
+                ? db.collection('questions').where('showId', '==', dto.showId).get()
+                : db.collection('questions').where('seasonId', '==', dto.seasonId).get(),
+            db.collection('users').doc(userId).get(),
+            db.collection('activity').where('userId', '==', userId).get(),
+        ]);
+        // ────────────────────────────────────────────────────────────────────
+
+        // Build answers map
         const questionsMap = new Map<string, any>();
         questionsSnap.docs.forEach((d) =>
             questionsMap.set(d.id, { id: d.id, ...d.data() }),
@@ -54,13 +123,11 @@ export class QuizService {
 
         const total = questionsMap.size;
         const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
-
-        const attemptId = uuidv4();
-        const today = new Date().toISOString().split('T')[0];
-        const now = new Date().toISOString();
+        const userData = (userDoc.data() as Record<string, any>) || {};
 
         const batch = db.batch();
 
+        // Write attempt
         batch.set(db.collection('attempts').doc(attemptId), {
             id: attemptId,
             userId,
@@ -73,20 +140,13 @@ export class QuizService {
             completedAt: now,
         });
 
-        const userRef = db.collection('users').doc(userId);
-        const userDoc = await userRef.get();
-        const userData = (userDoc.data() as Record<string, any>) || {};
-        batch.update(userRef, {
+        // Update user totals
+        batch.update(db.collection('users').doc(userId), {
             totalScore: (userData['totalScore'] || 0) + score,
             quizzesAttempted: (userData['quizzesAttempted'] || 0) + 1,
         });
 
-        // Update activity — single-field query to avoid composite index
-        const activitySnap = await db
-            .collection('activity')
-            .where('userId', '==', userId)
-            .get();
-
+        // Update daily activity
         const todayDoc = activitySnap.docs.find((d) => d.data().date === today);
         if (!todayDoc) {
             const actId = uuidv4();
@@ -100,25 +160,20 @@ export class QuizService {
             batch.update(todayDoc.ref, { count: (todayDoc.data().count || 0) + 1 });
         }
 
-        await this.updateLeaderboard(
-            db,
-            batch,
-            userId,
-            userData['username'] || '',
-            'global',
-            score,
-        );
+        // Update both leaderboards (global + show-specific)
+        await Promise.all([
+            this.updateLeaderboard(db, batch, userId, userData['username'] || '', 'global', score),
+            this.updateLeaderboard(db, batch, userId, userData['username'] || '', dto.showId, score),
+        ]);
 
-        await this.updateLeaderboard(
-            db,
-            batch,
-            userId,
-            userData['username'] || '',
-            dto.showId,
-            score,
-        );
-
+        // Commit all writes in a single round-trip
         await batch.commit();
+
+        // Invalidate leaderboard caches
+        await Promise.all([
+            this.cache.del('leaderboard:global'),
+            this.cache.del(`leaderboard:show:${dto.showId}`),
+        ]);
 
         return { attemptId, score, total, percentage, answers: detailedAnswers };
     }
@@ -159,7 +214,6 @@ export class QuizService {
 
     async getAttemptHistory(userId: string) {
         const db = this.firebaseService.getDb();
-        // Single-field filter only — sort in JS to avoid composite index
         const snap = await db
             .collection('attempts')
             .where('userId', '==', userId)

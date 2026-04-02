@@ -29,14 +29,18 @@ export default function QuizPage() {
     const [justSelected, setJustSelected] = useState<string | null>(null);
     const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const totalTime = useRef(0); // accumulates time spent
+    const isCombined = seasonId === 'all';
 
     useEffect(() => {
         if (!user) { router.push('/login'); return; }
-        quizApi.getQuestions(seasonId)
+        const fetchPromise = isCombined
+            ? quizApi.getAllShowQuestions(showId)
+            : quizApi.getQuestions(seasonId);
+        fetchPromise
             .then(res => { setQuestions(res.data); setTimerActive(true); })
             .catch(() => router.push('/'))
             .finally(() => setLoading(false));
-    }, [seasonId, user]);
+    }, [seasonId, showId, user]);
 
     useEffect(() => {
         if (!timerActive || loading || justSelected) return;

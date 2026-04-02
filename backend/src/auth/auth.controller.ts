@@ -17,4 +17,10 @@ export class AuthController {
     login(@Body() dto: LoginDto) {
         return this.authService.login(dto);
     }
+
+    @Post('google')
+    @HttpCode(HttpStatus.OK)
+    googleLogin(@Body('idToken') idToken: string) {
+        return this.authService.googleLogin(idToken);
+    }
 }

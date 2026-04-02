@@ -16,6 +16,7 @@ interface AuthContextType {
     loading: boolean;
     login: (identifier: string, password: string) => Promise<void>;
     register: (username: string, email: string, password: string) => Promise<void>;
+    loginWithGoogle: () => Promise<void>;
     logout: () => void;
     isAdmin: boolean;
 }
@@ -39,7 +40,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    // identifier = username OR email — backend auto-detects based on '@' symbol
     const login = async (identifier: string, password: string) => {
         const res = await authApi.login({ identifier, password });
         Cookies.set('lf_token', res.data.access_token, { expires: 7 });
@@ -52,6 +52,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(res.data.user);
     };
 
+    const loginWithGoogle = async () => {
+        // Dynamically import to avoid SSR issues with Firebase browser SDK
+        const { getGoogleIdToken } = await import('./firebase-client');
+        const idToken = await getGoogleIdToken();
+        const res = await authApi.googleLogin(idToken);
+        Cookies.set('lf_token', res.data.access_token, { expires: 7 });
+        setUser(res.data.user);
+    };
+
     const logout = () => {
         Cookies.remove('lf_token');
         setUser(null);
@@ -59,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, isAdmin: user?.role === 'admin' }}>
+        <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout, isAdmin: user?.role === 'admin' }}>
             {children}
         </AuthContext.Provider>
     );

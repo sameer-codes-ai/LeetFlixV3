@@ -107,6 +107,24 @@ export default function ShowPage() {
                                     ▶ Start S1:E1
                                 </Link>
                             )}
+                            {user && show.seasons && show.seasons.length > 1 && (
+                                <Link
+                                    href={`/shows/${slug}/quiz/all?showId=${show.id}`}
+                                    style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                        padding: '12px 28px', borderRadius: '8px',
+                                        background: 'linear-gradient(135deg, #8b5cf6, #c084fc)',
+                                        color: 'white',
+                                        fontWeight: '900', fontSize: '15px', textDecoration: 'none',
+                                        boxShadow: '0 0 24px rgba(139,92,246,0.35)',
+                                        transition: 'all 0.2s',
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.15)'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; }}
+                                >
+                                    🎯 All Seasons Quiz
+                                </Link>
+                            )}
                             {!user && (
                                 <Link
                                     href="/login"

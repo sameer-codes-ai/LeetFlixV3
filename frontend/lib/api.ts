@@ -33,6 +33,8 @@ export const authApi = {
         api.post('/auth/register', data),
     login: (data: { identifier: string; password: string }) =>
         api.post('/auth/login', data),
+    googleLogin: (idToken: string) =>
+        api.post('/auth/google', { idToken }),
 };
 
 // Users
@@ -53,6 +55,8 @@ export const showsApi = {
 export const quizApi = {
     getQuestions: (seasonId: string) =>
         api.get(`/quiz/season/${seasonId}/questions`),
+    getAllShowQuestions: (showId: string) =>
+        api.get(`/quiz/show/${showId}/all-questions`),
     submitAttempt: (data: {
         seasonId: string;
         showId: string;

@@ -1,9 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { FirebaseService } from '../firebase/firebase.service';
 
 @Injectable()
 export class UsersService {
-    constructor(private firebaseService: FirebaseService) { }
+    constructor(
+        private firebaseService: FirebaseService,
+        @Inject(CACHE_MANAGER) private cache: Cache,
+    ) { }
 
     async getMe(userId: string) {
         const db = this.firebaseService.getDb();
@@ -16,16 +21,16 @@ export class UsersService {
 
     async getUserStats(userId: string) {
         const db = this.firebaseService.getDb();
-        const doc = await db.collection('users').doc(userId).get();
+
+        // Parallel fetches for user doc + attempts
+        const [doc, attemptsSnap] = await Promise.all([
+            db.collection('users').doc(userId).get(),
+            db.collection('attempts').where('userId', '==', userId).get(),
+        ]);
+
         if (!doc.exists) throw new NotFoundException('User not found');
 
         const user = doc.data() as Record<string, any>;
-
-        // Single-field filter only — sort in JS to avoid composite index
-        const attemptsSnap = await db
-            .collection('attempts')
-            .where('userId', '==', userId)
-            .get();
 
         const attempts = attemptsSnap.docs
             .map((d) => ({ id: d.id, ...d.data() } as any))
@@ -64,14 +69,23 @@ export class UsersService {
 
     async searchUsers(query: string) {
         if (!query || query.trim().length === 0) return [];
-        const db = this.firebaseService.getDb();
-        const snap = await db.collection('users').get();
         const q = query.toLowerCase().trim();
-        return snap.docs
-            .map((d) => {
+
+        // Cache the full user list for search (30s TTL — fresh enough for search UX)
+        const cacheKey = 'users:all:light';
+        let allUsers = await this.cache.get<Array<{ id: string; username: string; totalScore: number }>>(cacheKey);
+
+        if (!allUsers) {
+            const db = this.firebaseService.getDb();
+            const snap = await db.collection('users').get();
+            allUsers = snap.docs.map((d) => {
                 const u = d.data() as Record<string, any>;
-                return { id: d.id, username: u['username'], totalScore: u['totalScore'] || 0 };
-            })
+                return { id: d.id, username: u['username'] || '', totalScore: u['totalScore'] || 0 };
+            });
+            await this.cache.set(cacheKey, allUsers, 30000); // 30s TTL
+        }
+
+        return allUsers
             .filter((u) => u.username && u.username.toLowerCase().includes(q))
             .slice(0, 10);
     }
