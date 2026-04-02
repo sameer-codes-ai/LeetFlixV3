@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { leaderboardApi, showsApi } from '@/lib/api';
@@ -9,7 +9,8 @@ import { Trophy, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 
 const MEDAL = ['🥇', '🥈', '🥉'];
 
-export default function LeaderboardPage() {
+// ─── Inner component uses useSearchParams ──────────────────────────────────────
+function LeaderboardContent() {
     const searchParams = useSearchParams();
     const showId = searchParams.get('showId');
 
@@ -237,5 +238,18 @@ export default function LeaderboardPage() {
                 </button>
             </div>
         </div>
+    );
+}
+
+// ─── Outer page wraps in Suspense (required for useSearchParams in Next.js) ────
+export default function LeaderboardPage() {
+    return (
+        <Suspense fallback={
+            <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 24px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                Loading leaderboard…
+            </div>
+        }>
+            <LeaderboardContent />
+        </Suspense>
     );
 }

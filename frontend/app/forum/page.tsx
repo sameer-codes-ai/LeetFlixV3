@@ -1,16 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { forumApi, showsApi } from '@/lib/api';
 import { Post, Show } from '@/lib/types';
 import { useAuth } from '@/lib/auth-context';
 import {
-    MessageSquare, Plus, Lock, ChevronRight, Search, Tv,
+    MessageSquare, Plus, Lock, ChevronRight, Tv,
 } from 'lucide-react';
 
-export default function ForumPage() {
+// ─── Inner component: allowed to call useSearchParams() ───────────────────────
+function ForumContent() {
     const searchParams = useSearchParams();
     const filterShowId = searchParams.get('showId');
     const { user } = useAuth();
@@ -205,5 +206,20 @@ export default function ForumPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+// ─── Outer page: wraps ForumContent in Suspense (required by Next.js for useSearchParams) ──
+export default function ForumPage() {
+    return (
+        <Suspense fallback={
+            <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: '100px', borderRadius: '12px' }} />)}
+                </div>
+            </div>
+        }>
+            <ForumContent />
+        </Suspense>
     );
 }

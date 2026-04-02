@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { quizApi } from '@/lib/api';
 import { Question } from '@/lib/types';
@@ -11,7 +11,8 @@ const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const TIMER_DURATION = 30;
 const AUTO_ADVANCE_DELAY = 650;
 
-export default function QuizPage() {
+// ─── Inner component uses useSearchParams ──────────────────────────────────────
+function QuizContent() {
     const params = useParams();
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -301,5 +302,18 @@ export default function QuizPage() {
                 ))}
             </footer>
         </div>
+    );
+}
+
+// ─── Outer page wraps in Suspense (required for useSearchParams in Next.js) ────
+export default function QuizPage() {
+    return (
+        <Suspense fallback={
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: 'var(--text-muted)' }}>
+                Loading quiz…
+            </div>
+        }>
+            <QuizContent />
+        </Suspense>
     );
 }
