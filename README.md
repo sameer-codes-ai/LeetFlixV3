@@ -38,6 +38,11 @@ A premium, full-stack gamified quiz platform designed for TV show enthusiasts. T
 - **Followers & Following**: Clickable count badges open a modal listing all followers or accounts you follow.
 - **Profile Discovery**: Navigate to any followed user's profile to view their stats, level, heatmap, and accuracy.
 
+### 🔍 Global Search
+- **Unified Search**: Search across shows, users, and forum posts from anywhere in the platform.
+- **Smart Suggestions**: Real-time suggestions as you type for quick navigation.
+- **Multi-entity Results**: Find shows by title, users by username, and discussions by content.
+
 ---
 
 ## 🛠️ Technological Stack
@@ -105,6 +110,82 @@ Create composite indexes in Firebase Console for:
 
 ---
 
+
+
+## 🧪 Development & Testing
+
+### Running Tests
+```bash
+# Backend unit tests
+cd backend
+npm run test
+
+# E2E tests
+npm run test:e2e
+
+# Watch mode
+npm run test:watch
+```
+
+### Linting & Code Quality
+```bash
+# Backend linting
+cd backend
+npm run lint
+npm run lint --fix  # Auto-fix issues
+
+# Frontend linting
+cd frontend
+npm run lint
+```
+
+### Database Seeding
+For development, populate Firestore with sample data:
+```bash
+cd backend
+npm run seed  # Imports sample shows, seasons, and questions
+```
+
+---
+
+## 📧 Support & Contribution
+
+### Found a Bug?
+1. Check if it's already reported in [Issues](https://github.com/sameer-codes-ai/LeetFlixV3/issues)
+2. Create a new issue with:
+   - Detailed description
+   - Steps to reproduce
+   - Expected vs. actual behavior
+   - Screenshots if applicable
+
+### Want to Contribute?
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+LeetFlix V3 © 2024. All rights reserved.
+
+---
+
+## 🙏 Credits
+
+Built with ❤️ by the LeetFlix team. Powered by:
+- [NestJS](https://nestjs.com/) - Backend framework
+- [Next.js](https://nextjs.org/) - Frontend framework
+- [Firebase](https://firebase.google.com/) - Database & authentication
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
+- [Lucide Icons](https://lucide.dev/) - Icon library
+
+---
+
+**Latest Update**: April 2026 | Version 3.0+
+
 ## 📝 Project Structure
 
 ```
@@ -132,3 +213,51 @@ LeetFlixV3/
         ├── forum/            # Discussion Center
         └── admin/            # Administrative Control
 ```
+
+---
+
+## 🔌 API Endpoints Overview
+
+### 🔐 Authentication
+- `POST /auth/register` - Create new account
+- `POST /auth/login` - Sign in and receive JWT token
+- `POST /auth/refresh` - Refresh authentication token
+
+### 👥 User Management
+- `GET /users/:id` - Get user profile and stats
+- `PATCH /users/:id` - Update user profile
+- `GET /users/:id/leaderboard-position` - Get user's global rank
+
+### 📺 Shows & Quiz
+- `GET /shows` - List all TV shows
+- `GET /shows/:slug` - Get show details with seasons
+- `POST /quiz/submit` - Submit quiz attempt and calculate score
+- `GET /quiz/:showId` - Get questions for show quiz
+
+### 📊 Leaderboard
+- `GET /leaderboard` - Get global leaderboard rankings
+- `GET /leaderboard/shows/:showId` - Get show-specific leaderboard
+- `GET /leaderboard/user/:userId` - Get user's leaderboard position
+
+### 💬 Forum
+- `GET /forum/posts` - Get forum posts for a show
+- `POST /forum/posts` - Create new forum post (requires auth)
+- `POST /forum/posts/:id/comments` - Comment on a post (requires auth)
+- `DELETE /forum/posts/:id` - Delete post (author or admin only)
+- `PATCH /forum/posts/:id` - Edit post (author or admin only)
+
+### 📈 Activity
+- `GET /activity/:userId` - Get user's activity heatmap for year
+
+### 🤝 Social
+- `POST /social/follow/:userId` - Follow a user
+- `DELETE /social/follow/:userId` - Unfollow a user
+- `GET /social/:userId/followers` - Get user's followers
+- `GET /social/:userId/following` - Get user's following list
+- `GET /social/follow/:userId/status` - Check if following status
+
+### ⚙️ Admin
+- `POST /admin/bulk-ingest` - Upload JSON to bulk import shows/seasons/questions (admin only)
+- `PATCH /admin/users/:id/role` - Promote user to admin (admin only)
+
+---
