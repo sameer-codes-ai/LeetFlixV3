@@ -52,7 +52,7 @@ function LeaderboardContent() {
             </div>
 
             {/* Tabs */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            <div className="filter-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
                 <Link
                     href="/leaderboard"
                     style={{
@@ -95,6 +95,7 @@ function LeaderboardContent() {
             <div className="glass" style={{ overflow: 'hidden' }}>
                 {/* Header row */}
                 <div
+                    className="leaderboard-row"
                     style={{
                         display: 'grid',
                         gridTemplateColumns: '60px 1fr 120px 120px',
@@ -110,7 +111,7 @@ function LeaderboardContent() {
                 >
                     <span>Rank</span>
                     <span>Player</span>
-                    <span style={{ textAlign: 'center' }}>Quizzes</span>
+                    <span className="leaderboard-quizzes" style={{ textAlign: 'center' }}>Quizzes</span>
                     <span style={{ textAlign: 'right' }}>Score</span>
                 </div>
 
@@ -129,6 +130,7 @@ function LeaderboardContent() {
                         return (
                             <div
                                 key={entry.id}
+                                className="leaderboard-row"
                                 style={{
                                     display: 'grid',
                                     gridTemplateColumns: '60px 1fr 120px 120px',
@@ -188,7 +190,7 @@ function LeaderboardContent() {
                                 </Link>
 
                                 {/* Quizzes */}
-                                <div style={{ textAlign: 'center' }}>
+                                <div className="leaderboard-quizzes" style={{ textAlign: 'center' }}>
                                     <span className="badge badge-cyan" style={{ fontSize: '12px' }}>
                                         {entry.quizzesAttempted}
                                     </span>

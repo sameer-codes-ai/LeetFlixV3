@@ -43,14 +43,25 @@ A premium, full-stack gamified quiz platform designed for TV show enthusiasts. T
 - **Smart Suggestions**: Real-time suggestions as you type for quick navigation.
 - **Multi-entity Results**: Find shows by title, users by username, and discussions by content.
 
+### 📱 Full Responsive Design
+- **Mobile-First Approach**: Perfectly scales down to 375px viewports. Features a mobile hamburger menu and collapsible navigation panels.
+- **Dynamic Grid Layouts**: Automatic grid scaling across Desktop, Tablet, and Mobile to ensure no horizontal overflow.
+- **Touch-Optimized UI**: All interactive elements (quizzes, follow buttons, search) are optimized for touch devices.
+
+### ⚡ Performance & Cloud Integrations
+- **Caching Layer**: Intelligent `@nestjs/cache-manager` caching for leaderboards, user searches, and quiz data to minimize database reads.
+- **Google OAuth Integration**: Secure Google sign-in workflow built directly on Firebase Admin SDK (Backend) and Firebase Client (Frontend).
+- **Production CI/CD Ready**: Fully configured for Vercel (Frontend) and Render (Backend) deployments, utilizing Next.js parallel promise resolutions and `<Suspense>` boundaries for seamless static site generation (SSG).
+
 ---
 
 ## 🛠️ Technological Stack
 
-- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, Lucide Icons.
-- **Backend**: NestJS, Firebase Admin SDK, JWT Authentication.
+- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, Vanilla CSS Media Queries, Lucide Icons. Hosted on **Vercel**.
+- **Backend**: NestJS, Firebase Admin SDK, JWT Authentication, `@nestjs/cache-manager`. Hosted on **Render**.
 - **Database**: Google Cloud Firestore (NoSQL).
-- **Design**: Premium Dark Mode with a curated Orange/Violet/Neon-Green palette.
+- **Authentication**: JWT & Full Google OAuth Flow.
+- **Design**: Premium Dark Mode with a curated Orange/Violet/Neon-Green palette, responsive across all screen sizes.
 
 ---
 

@@ -86,7 +86,7 @@ export default function HomePage() {
     <div>
       {/* ===== HERO ===== */}
       {!user ? (
-        <header style={{ position: 'relative', minHeight: '85vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        <header className="hero-section" style={{ position: 'relative', minHeight: '85vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, backgroundImage: `url('https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=2069&auto=format&fit=crop')`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.35 }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(15,26,15,0.2) 0%, rgba(15,26,15,0.55) 50%, #0f1a0f 100%)' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,107,53,0.08), transparent)' }} />
@@ -103,7 +103,7 @@ export default function HomePage() {
             <p style={{ fontSize: '18px', color: '#94a394', maxWidth: '560px', margin: '0 auto 44px', lineHeight: 1.7 }}>
               The gamified quiz platform for TV show enthusiasts. Prove your fan status, climb the ranks, and earn exclusive badges for your favourite series.
             </p>
-            <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div className="hero-buttons" style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link href="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '16px 44px', borderRadius: '12px', background: '#ff6b35', color: '#0f1a0f', fontWeight: '900', fontSize: '17px', textDecoration: 'none', boxShadow: '0 0 40px rgba(255,107,53,0.4)', transition: 'all 0.2s' }}
                 onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.12)'; e.currentTarget.style.transform = 'scale(1.03)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; e.currentTarget.style.transform = 'scale(1)'; }}>
@@ -118,8 +118,8 @@ export default function HomePage() {
           </div>
         </header>
       ) : (
-        <header style={{ padding: '40px 80px 0', marginBottom: '40px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        <header className="section-padding" style={{ paddingTop: '40px', paddingBottom: 0, marginBottom: '40px' }}>
+          <div className="hero-featured-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
             {shows.slice(0, 2).map((show, idx) => {
               const seasonCount = show.seasons?.length ?? 0;
               return (
@@ -146,13 +146,13 @@ export default function HomePage() {
       )}
 
       {/* ===== FEATURED SERIES SECTION ===== */}
-      <section style={{ padding: user ? '0 80px 64px' : '0 0 64px', marginTop: user ? '0' : '-40px', position: 'relative', zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '24px', padding: !user ? '0 80px' : undefined }}>
+      <section className={user ? 'section-padding' : ''} style={{ paddingTop: 0, paddingBottom: '64px', marginTop: user ? '0' : '-40px', position: 'relative', zIndex: 10 }}>
+        <div className={!user ? 'section-padding' : ''} style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <h2 style={{ fontSize: '28px', fontWeight: '800', color: 'white', letterSpacing: '-0.5px' }}>{user ? 'Browse Shows' : 'Featured Series'}</h2>
             <p style={{ color: '#4a5e4a', marginTop: '4px', fontSize: '14px' }}>Join the active quiz arenas for these trending shows</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingRight: !user ? '80px' : undefined }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ position: 'relative' }}>
               <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#4a5e4a' }} />
               <input className="input" placeholder="Search shows…" value={search}
@@ -163,7 +163,7 @@ export default function HomePage() {
           </div>
         </div>
         {loading ? (
-          <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', padding: !user ? '0 80px 12px' : '0 0 12px', scrollbarWidth: 'none' }}>
+          <div className={`show-card-scroll ${!user ? 'section-padding' : ''}`} style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '12px', scrollbarWidth: 'none' }}>
             {[...Array(7)].map((_, i) => (
               <div key={i} className="skeleton" style={{ flexShrink: 0, width: '200px', height: '360px', borderRadius: '12px' }} />
             ))}
@@ -173,7 +173,7 @@ export default function HomePage() {
             <p style={{ fontSize: '16px' }}>{search ? 'No shows match your search' : 'No shows yet — ask an admin to upload quiz content'}</p>
           </div>
         ) : (
-          <div className="fade-in" style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: !user ? '0 80px 16px' : '0 0 16px', scrollbarWidth: 'none' }}>
+          <div className={`fade-in show-card-scroll ${!user ? 'section-padding' : ''}`} style={{ display: 'flex', gap: '20px', overflowX: 'auto', paddingBottom: '16px', scrollbarWidth: 'none' }}>
             {filtered.map((show, i) => <ShowCard key={show.id} show={show} index={i} />)}
           </div>
         )}
@@ -182,7 +182,7 @@ export default function HomePage() {
       {/* ===== LEADERBOARD + HEATMAP TEASER (guest only) ===== */}
       {!user && (
         <>
-          <section style={{ padding: '0 80px 80px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+          <section className="section-padding home-two-col" style={{ paddingBottom: '80px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
             <div style={{ background: 'rgba(255,107,53,0.03)', border: '1px solid rgba(255,107,53,0.1)', borderRadius: '24px', padding: '32px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, right: 0, padding: '32px', color: 'rgba(255,107,53,0.07)', fontSize: '120px', lineHeight: 1, pointerEvents: 'none' }}>🏆</div>
               <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -231,7 +231,7 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '24px' }}>
+              <div className="stats-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '24px' }}>
                 {[{ label: 'WEEKLY STREAK', value: '14 Days' }, { label: 'TOTAL QUIZZES', value: '342 📈' }].map(stat => (
                   <div key={stat.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '14px' }}>
                     <p style={{ fontSize: '9px', fontWeight: '800', letterSpacing: '1.5px', color: '#4a5e4a', textTransform: 'uppercase', marginBottom: '4px' }}>{stat.label}</p>
@@ -242,8 +242,8 @@ export default function HomePage() {
             </div>
           </section>
 
-          <section style={{ padding: '0 80px 80px' }}>
-            <div style={{ borderRadius: '28px', overflow: 'hidden', position: 'relative', background: 'linear-gradient(135deg, #ff6b35, #c084fc)', padding: '80px', textAlign: 'center' }}>
+          <section className="section-padding" style={{ paddingBottom: '80px' }}>
+            <div className="home-cta-section" style={{ borderRadius: '28px', overflow: 'hidden', position: 'relative', background: 'linear-gradient(135deg, #ff6b35, #c084fc)', padding: '80px', textAlign: 'center' }}>
               <h2 style={{ fontSize: 'clamp(28px,4vw,48px)', fontWeight: '900', color: '#0f1a0f', marginBottom: '20px', maxWidth: '600px', margin: '0 auto 20px' }}>
                 Ready to claim the Iron Throne of TV knowledge?
               </h2>
@@ -260,7 +260,7 @@ export default function HomePage() {
         </>
       )}
 
-      <footer style={{ borderTop: '1px solid rgba(255,107,53,0.08)', padding: '40px 80px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <footer className="footer-bar section-padding" style={{ borderTop: '1px solid rgba(255,107,53,0.08)', paddingTop: '40px', paddingBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.5 }}>
           <span style={{ fontSize: '18px', fontWeight: '900', letterSpacing: '-0.5px', color: '#ff6b35' }}>LEETFLIX</span>
         </div>

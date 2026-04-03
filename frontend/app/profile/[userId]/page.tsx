@@ -108,7 +108,7 @@ function Sidebar({ username, level, xpToNext }: { username: string; level: numbe
     ];
 
     return (
-        <aside style={{
+        <aside className="profile-sidebar" style={{
             width: '256px', flexShrink: 0,
             borderRight: '1px solid rgba(255,107,53,0.1)',
             background: '#0f1a0f',
@@ -293,11 +293,11 @@ export default function ProfilePage() {
         : 0;
 
     return (
-        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#0f1a0f' }}>
+        <div className="profile-layout" style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden', background: '#0f1a0f' }}>
             <Sidebar username={profile.username} level={level} xpToNext={2450} />
 
             {/* Main content */}
-            <main style={{ flex: 1, overflowY: 'auto', position: 'relative', background: '#0f1a0f' }}>
+            <main className="profile-content" style={{ flex: 1, overflowY: 'auto', position: 'relative', background: '#0f1a0f' }}>
 
                 {/* ===== STICKY TOP BAR ===== */}
                 <header style={{
@@ -366,7 +366,7 @@ export default function ProfilePage() {
                         )}
                     </div>
                     {/* Right controls */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                         {streak > 0 && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '10px', background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.2)' }}>
                                 <span style={{ fontSize: '15px' }}>🔥</span>
@@ -465,7 +465,7 @@ export default function ProfilePage() {
                 <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
                     {/* ===== 3 STAT CARDS ===== */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                    <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                         {[
                             { icon: '🏅', label: 'Total Score', value: totalScore.toLocaleString(), badge: '+12%', badgeColor: '#ff6b35' },
                             { icon: '🌐', label: 'Global Rank', value: `#${Math.max(1, 5000 - totalScore).toLocaleString()}`, badge: 'Top 5%', badgeColor: '#ff6b35' },
@@ -493,7 +493,7 @@ export default function ProfilePage() {
                     </div>
 
                     {/* ===== HEATMAP + RECOMMENDED ===== */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: '24px' }}>
+                    <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: '24px' }}>
 
                         {/* Heatmap */}
                         <div>

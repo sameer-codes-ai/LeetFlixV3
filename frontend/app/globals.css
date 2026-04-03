@@ -502,3 +502,212 @@ body {
 .option-btn:disabled:not(.selected) {
   opacity: 0.45;
 }
+
+/* ===================================================================
+   RESPONSIVE DESIGN SYSTEM
+   Breakpoints:  ≤1024 (tablet-landscape)
+                 ≤768  (tablet-portrait / small laptop)
+                 ≤480  (phone)
+   =================================================================== */
+
+/* --- Utility: responsive section padding --- */
+.section-padding  { padding-left: 80px; padding-right: 80px; }
+.container-main   { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+/* --- Mobile nav toggle (hidden on desktop) --- */
+.nav-toggle {
+  display: none;
+  background: none;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* --- Mobile nav panel (hidden on desktop) --- */
+.nav-mobile-panel {
+  display: none;
+  position: absolute;
+  top: 64px;
+  left: 0;
+  right: 0;
+  background: rgba(8, 12, 8, 0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,107,53,0.1);
+  padding: 16px 24px;
+  z-index: 99;
+  flex-direction: column;
+  gap: 8px;
+}
+.nav-mobile-panel.open { display: flex; }
+
+.nav-mobile-panel a,
+.nav-mobile-panel button {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 0.2s;
+  text-align: left;
+}
+.nav-mobile-panel a:hover,
+.nav-mobile-panel button:hover {
+  background: rgba(255,107,53,0.08);
+  color: #ff6b35;
+}
+
+/* ===== TABLET LANDSCAPE (≤1024) ===== */
+@media (max-width: 1024px) {
+  .section-padding { padding-left: 48px; padding-right: 48px; }
+}
+
+/* ===== TABLET PORTRAIT (≤768) ===== */
+@media (max-width: 768px) {
+  .section-padding { padding-left: 20px; padding-right: 20px; }
+
+  /* --- Navbar: show hamburger, hide desktop links & search --- */
+  .nav-toggle { display: flex; }
+  .nav-desktop-links,
+  .nav-desktop-auth,
+  .nav-desktop-search { display: none !important; }
+
+  /* --- Home: hero featured grid → single column --- */
+  .hero-featured-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* --- Home: leaderboard + heatmap → stack --- */
+  .home-two-col {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* --- Home: CTA section --- */
+  .home-cta-section {
+    padding: 48px 24px !important;
+  }
+
+  /* --- Footer → stack --- */
+  .footer-bar {
+    flex-direction: column !important;
+    gap: 16px !important;
+    text-align: center;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  /* --- Leaderboard: simplify grid --- */
+  .leaderboard-row {
+    grid-template-columns: 50px 1fr 90px !important;
+  }
+  .leaderboard-quizzes { display: none !important; }
+
+  /* --- Profile sidebar → hidden, content full width --- */
+  .profile-layout {
+    flex-direction: column !important;
+  }
+  .profile-sidebar {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-direction: row !important;
+    overflow-x: auto;
+    gap: 8px !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 12px 20px !important;
+  }
+  .profile-content {
+    width: 100% !important;
+    padding: 20px !important;
+  }
+
+  /* --- Stats grid → 2 columns --- */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* --- Admin upload form → full width --- */
+  .admin-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* --- Show detail seasons → 1 column --- */
+  .seasons-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* --- Quiz: narrower max-width --- */
+  .quiz-container {
+    max-width: 100% !important;
+    padding: 0 16px !important;
+  }
+}
+
+/* ===== PHONE (≤480) ===== */
+@media (max-width: 480px) {
+  .section-padding { padding-left: 16px; padding-right: 16px; }
+
+  /* --- Hero text smaller --- */
+  .hero-section h1 {
+    font-size: clamp(36px, 10vw, 56px) !important;
+    letter-spacing: -1px !important;
+  }
+
+  /* --- Show cards → narrower --- */
+  .show-card-scroll a {
+    width: 160px !important;
+    flex: 0 0 160px !important;
+  }
+
+  /* --- CTA buttons → full width --- */
+  .hero-buttons {
+    flex-direction: column !important;
+    width: 100%;
+  }
+  .hero-buttons a {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 14px 24px !important;
+    font-size: 15px !important;
+  }
+
+  /* --- Stats grid → 1 column on tiny screens --- */
+  .stats-grid-2col {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* --- Forum/leaderboard filter tabs: scroll --- */
+  .filter-tabs {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 4px;
+  }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+
+  /* --- Results footer stats --- */
+  .results-stats-footer {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  /* --- Glass cards: less padding --- */
+  .glass {
+    padding: 16px !important;
+    border-radius: 12px;
+  }
+
+  /* --- Buttons: slightly smaller --- */
+  .btn-primary, .btn-secondary, .btn-violet {
+    padding: 10px 18px;
+    font-size: 13px;
+  }
+}
