@@ -120,7 +120,7 @@ export default function HomePage() {
       ) : (
         <header className="section-padding" style={{ paddingTop: '40px', paddingBottom: 0, marginBottom: '40px' }}>
           <div className="hero-featured-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            {shows.slice(0, 2).map((show, idx) => {
+            {[...shows].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 2).map((show, idx) => {
               const seasonCount = show.seasons?.length ?? 0;
               return (
                 <Link href={`/shows/${show.slug}`} key={show.id} style={{ position: 'relative', height: '45vh', minHeight: '340px', borderRadius: '16px', overflow: 'hidden', display: 'block', textDecoration: 'none' }}>

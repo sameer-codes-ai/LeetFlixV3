@@ -32,6 +32,7 @@ export interface Question {
     showId: string;
     question: string;
     options: string[];
+    answer: string;
 }
 
 export interface SubmitAnswer {

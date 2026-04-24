@@ -5,11 +5,11 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { quizApi } from '@/lib/api';
 import { Question } from '@/lib/types';
 import { useAuth } from '@/lib/auth-context';
-import { CheckCircle, Flag } from 'lucide-react';
+import { CheckCircle, XCircle, Flag } from 'lucide-react';
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const TIMER_DURATION = 30;
-const AUTO_ADVANCE_DELAY = 650;
+const AUTO_ADVANCE_DELAY = 1500;
 
 // ─── Inner component uses useSearchParams ──────────────────────────────────────
 function QuizContent() {
@@ -192,6 +192,41 @@ function QuizContent() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             {q.options.map((option: string, i: number) => {
                                 const isSelected = answers[q.id] === option;
+                                const isCorrectAnswer = q.answer === option;
+                                const showFeedback = !!justSelected;
+                                const isWrongPick = showFeedback && isSelected && !isCorrectAnswer;
+                                const isCorrectReveal = showFeedback && isCorrectAnswer;
+
+                                // Determine border + background colors based on feedback state
+                                let borderColor = 'rgba(255,107,53,0.1)';
+                                let bgColor = 'rgba(255,255,255,0.03)';
+                                let labelBg = 'rgba(255,107,53,0.1)';
+                                let labelColor = '#94a394';
+                                let textWeight = '400';
+                                let opacityVal = 1;
+
+                                if (isCorrectReveal) {
+                                    borderColor = '#10b981';
+                                    bgColor = 'rgba(16,185,129,0.12)';
+                                    labelBg = '#10b981';
+                                    labelColor = '#0f1a0f';
+                                    textWeight = '700';
+                                } else if (isWrongPick) {
+                                    borderColor = '#f43f5e';
+                                    bgColor = 'rgba(244,63,94,0.12)';
+                                    labelBg = '#f43f5e';
+                                    labelColor = 'white';
+                                    textWeight = '700';
+                                } else if (isSelected && !showFeedback) {
+                                    borderColor = '#ff6b35';
+                                    bgColor = 'rgba(255,107,53,0.12)';
+                                    labelBg = '#ff6b35';
+                                    labelColor = '#0f1a0f';
+                                    textWeight = '700';
+                                } else if (showFeedback) {
+                                    opacityVal = 0.35;
+                                }
+
                                 return (
                                     <button
                                         key={i}
@@ -201,11 +236,11 @@ function QuizContent() {
                                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                             width: '100%', padding: '18px 20px',
                                             borderRadius: '10px', textAlign: 'left', cursor: justSelected ? 'default' : 'pointer',
-                                            border: isSelected ? '2px solid #ff6b35' : '1px solid rgba(255,107,53,0.1)',
-                                            background: isSelected ? 'rgba(255,107,53,0.12)' : 'rgba(255,255,255,0.03)',
+                                            border: `2px solid ${borderColor}`,
+                                            background: bgColor,
                                             color: 'var(--text-primary)',
-                                            boxShadow: isSelected ? '0 0 16px rgba(255,107,53,0.12)' : 'none',
-                                            transition: 'all 0.18s', opacity: justSelected && !isSelected ? 0.4 : 1,
+                                            boxShadow: (isCorrectReveal || isWrongPick) ? `0 0 20px ${borderColor}40` : 'none',
+                                            transition: 'all 0.25s', opacity: opacityVal,
                                         }}
                                         onMouseEnter={(e) => {
                                             if (!justSelected && !isSelected) {
@@ -214,7 +249,7 @@ function QuizContent() {
                                             }
                                         }}
                                         onMouseLeave={(e) => {
-                                            if (!isSelected) {
+                                            if (!isSelected && !showFeedback) {
                                                 (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)';
                                                 (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,107,53,0.1)';
                                             }
@@ -224,15 +259,16 @@ function QuizContent() {
                                             <span style={{
                                                 width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 borderRadius: '6px', flexShrink: 0,
-                                                background: isSelected ? '#ff6b35' : 'rgba(255,107,53,0.1)',
-                                                color: isSelected ? '#0f1a0f' : '#94a394',
-                                                fontSize: '13px', fontWeight: '900', transition: 'all 0.18s',
+                                                background: labelBg,
+                                                color: labelColor,
+                                                fontSize: '13px', fontWeight: '900', transition: 'all 0.25s',
                                             }}>
                                                 {OPTION_LABELS[i]}
                                             </span>
-                                            <span style={{ fontSize: '16px', fontWeight: isSelected ? '700' : '400' }}>{option}</span>
+                                            <span style={{ fontSize: '16px', fontWeight: textWeight }}>{option}</span>
                                         </div>
-                                        {isSelected && <CheckCircle size={18} color="#ff6b35" />}
+                                        {isCorrectReveal && <CheckCircle size={20} color="#10b981" />}
+                                        {isWrongPick && <XCircle size={20} color="#f43f5e" />}
                                     </button>
                                 );
                             })}
@@ -271,8 +307,8 @@ function QuizContent() {
                         </button>
                     )}
                     {justSelected && (
-                        <p style={{ fontSize: '13px', color: '#ff6b35', fontWeight: '700' }}>
-                            {isLast ? '✅ Submitting…' : '⏩ Moving on…'}
+                        <p style={{ fontSize: '13px', fontWeight: '700', color: justSelected === q.answer ? '#10b981' : '#f43f5e' }}>
+                            {justSelected === q.answer ? '✅ Correct!' : `❌ Wrong — correct: ${q.answer}`}
                         </p>
                     )}
                 </div>

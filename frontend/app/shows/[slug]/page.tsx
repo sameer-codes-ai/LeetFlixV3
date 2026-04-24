@@ -198,7 +198,7 @@ export default function ShowPage() {
                                         fontSize: '9px', fontWeight: '900', color: '#ff6b35',
                                         border: '1px solid rgba(255,107,53,0.3)', textTransform: 'uppercase', letterSpacing: '1px',
                                     }}>
-                                        Season {idx + 1}
+                                        Season {season.order}
                                     </div>
                                     {/* Bottom gradient */}
                                     <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '60%', background: 'linear-gradient(to top, rgba(15,26,15,1), transparent)' }} />

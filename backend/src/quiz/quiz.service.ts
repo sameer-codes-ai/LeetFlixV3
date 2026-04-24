@@ -17,8 +17,7 @@ function shuffle<T>(arr: T[]): T[] {
 
 function sanitizeQuestion(d: FirebaseFirestore.DocumentSnapshot) {
     const data = d.data() as Record<string, any>;
-    const { answer: _a, ...rest } = data;
-    return { id: d.id, ...rest, options: shuffle(rest.options || []) };
+    return { id: d.id, ...data, options: shuffle(data.options || []) };
 }
 
 @Injectable()
@@ -45,8 +44,7 @@ export class QuizService {
                 .get();
             rawQuestions = questionsSnap.docs.map((d) => {
                 const data = d.data() as Record<string, any>;
-                const { answer: _a, ...rest } = data;
-                return { id: d.id, ...rest };
+                return { id: d.id, ...data };
             });
             await this.cache.set(cacheKey, rawQuestions, 300000); // 5 min TTL
         }
@@ -75,8 +73,7 @@ export class QuizService {
         questionSnaps.forEach((snap) => {
             snap.docs.forEach((d) => {
                 const data = d.data() as Record<string, any>;
-                const { answer: _a, ...rest } = data;
-                allQuestions.push({ id: d.id, ...rest, options: shuffle(rest.options || []) });
+                allQuestions.push({ id: d.id, ...data, options: shuffle(data.options || []) });
             });
         });
 
