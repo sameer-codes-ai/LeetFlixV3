@@ -64,6 +64,7 @@ export const quizApi = {
     }) => api.post('/quiz/attempt', data),
     getHistory: () => api.get('/quiz/history'),
     getAttempt: (id: string) => api.get(`/quiz/attempt/${id}`),
+    getLearnData: (showId: string) => api.get(`/quiz/show/${showId}/learn`),
 };
 
 // Leaderboard

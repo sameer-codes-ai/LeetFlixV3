@@ -147,6 +147,24 @@ export default function ShowPage() {
                             }}>
                                 + My List
                             </button>
+                            {user && show.seasons && show.seasons.length > 0 && (
+                                <Link
+                                    href={`/shows/${slug}/learn`}
+                                    style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                        padding: '12px 28px', borderRadius: '8px',
+                                        background: 'linear-gradient(135deg, #10b981, #059669)',
+                                        color: 'white',
+                                        fontWeight: '900', fontSize: '15px', textDecoration: 'none',
+                                        boxShadow: '0 0 24px rgba(16,185,129,0.3)',
+                                        transition: 'all 0.2s',
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.15)'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; }}
+                                >
+                                    📖 Learn
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -167,7 +185,15 @@ export default function ShowPage() {
                         <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px', color: '#4a5e4a' }}>
                             No seasons uploaded yet.
                         </div>
-                    ) : show.seasons.sort((a, b) => a.order - b.order).map((season, idx) => {
+                    ) : show.seasons.sort((a, b) => {
+                        // Primary: sort by order field
+                        const orderDiff = (a.order || 0) - (b.order || 0);
+                        if (orderDiff !== 0) return orderDiff;
+                        // Fallback: extract numbers from name (e.g., "Week 1", "Season 2")
+                        const numA = parseInt(a.name.replace(/\D/g, '')) || 0;
+                        const numB = parseInt(b.name.replace(/\D/g, '')) || 0;
+                        return numA - numB;
+                    }).map((season, idx) => {
                         const [g1, g2] = GRADIENT_COVERS[idx % GRADIENT_COVERS.length];
                         return (
                             <div

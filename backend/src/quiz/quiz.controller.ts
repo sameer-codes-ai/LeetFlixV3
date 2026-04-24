@@ -28,6 +28,12 @@ export class QuizController {
         return this.quizService.getAllShowQuestions(showId);
     }
 
+    @Get('show/:showId/learn')
+    @UseGuards(JwtAuthGuard)
+    getLearnData(@Param('showId') showId: string) {
+        return this.quizService.getLearnData(showId);
+    }
+
     @Post('attempt')
     @UseGuards(JwtAuthGuard)
     submitQuiz(@CurrentUser() user: any, @Body() dto: SubmitQuizDto) {

@@ -235,8 +235,8 @@ export default function ResultsPage() {
                                 <XCircle size={18} color="var(--accent-red)" style={{ flexShrink: 0, marginTop: '2px' }} />
                             )}
                             <div style={{ flex: 1 }}>
-                                <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '6px' }}>
-                                    Q{i + 1}: Question {i + 1}
+                                <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '6px', color: 'var(--text-primary)' }}>
+                                    Q{i + 1}: {a.questionText || `Question ${i + 1}`}
                                 </p>
                                 <p style={{ fontSize: '13px', color: a.correct ? 'var(--accent-green)' : 'var(--accent-red)' }}>
                                     Your answer: {a.selected || '(skipped)'}

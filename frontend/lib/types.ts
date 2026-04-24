@@ -47,6 +47,7 @@ export interface AttemptResult {
     percentage: number;
     answers: {
         questionId: string;
+        questionText?: string;
         selected: string;
         correct: boolean;
         correctAnswer: string;

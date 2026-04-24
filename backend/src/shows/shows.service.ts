@@ -36,7 +36,7 @@ export class ShowsService {
 
         const result = shows.map((show: any) => ({
             ...show,
-            seasons: seasonsByShowId[show.id] || []
+            seasons: (seasonsByShowId[show.id] || []).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)),
         }));
 
         await this.cache.set(cacheKey, result, 120000); // 2 min TTL

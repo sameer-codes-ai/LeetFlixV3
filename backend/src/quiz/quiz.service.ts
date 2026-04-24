@@ -80,6 +80,49 @@ export class QuizService {
         return shuffle(allQuestions);
     }
 
+    async getLearnData(showId: string) {
+        const db = this.firebaseService.getDb();
+
+        const [seasonsSnap, questionsSnap] = await Promise.all([
+            db.collection('seasons').where('showId', '==', showId).get(),
+            db.collection('questions').where('showId', '==', showId).get(),
+        ]);
+
+        if (seasonsSnap.empty) throw new NotFoundException('No seasons found for this show');
+
+        // Build season list sorted by order + natural name
+        const seasons = seasonsSnap.docs
+            .map((d) => ({ id: d.id, ...d.data() } as any))
+            .sort((a: any, b: any) => {
+                const orderDiff = (a.order || 0) - (b.order || 0);
+                if (orderDiff !== 0) return orderDiff;
+                const numA = parseInt(a.name.replace(/\D/g, '')) || 0;
+                const numB = parseInt(b.name.replace(/\D/g, '')) || 0;
+                return numA - numB;
+            });
+
+        // Group questions by seasonId
+        const questionsBySeason: Record<string, any[]> = {};
+        questionsSnap.docs.forEach((d) => {
+            const data = d.data() as Record<string, any>;
+            const sid = data.seasonId;
+            if (!questionsBySeason[sid]) questionsBySeason[sid] = [];
+            questionsBySeason[sid].push({
+                id: d.id,
+                question: data.question,
+                options: data.options || [],
+                answer: data.answer,
+            });
+        });
+
+        return seasons.map((s: any) => ({
+            seasonId: s.id,
+            seasonName: s.name,
+            order: s.order,
+            questions: questionsBySeason[s.id] || [],
+        }));
+    }
+
     async submitQuiz(userId: string, dto: SubmitQuizDto) {
         const db = this.firebaseService.getDb();
         const today = new Date().toISOString().split('T')[0];
@@ -112,6 +155,7 @@ export class QuizService {
             if (correct) score++;
             return {
                 questionId: a.questionId,
+                questionText: question?.question || '',
                 selected: a.selected,
                 correct,
                 correctAnswer: question?.answer,
