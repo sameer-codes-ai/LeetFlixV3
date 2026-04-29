@@ -76,7 +76,7 @@ export default function LearnPage() {
     return (
         <div style={{ minHeight: '100vh', background: '#0f1a0f' }}>
             {/* Header */}
-            <header style={{
+            <header className="learn-header" style={{
                 position: 'sticky', top: 0, zIndex: 30,
                 background: 'rgba(15,26,15,0.95)', backdropFilter: 'blur(16px)',
                 borderBottom: '1px solid rgba(255,107,53,0.1)',
@@ -202,7 +202,7 @@ export default function LearnPage() {
                                                     </div>
 
                                                     {/* Options */}
-                                                    <div style={{ marginLeft: '42px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                    <div className="learn-options" style={{ marginLeft: '42px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                                         {q.options.map((opt, oi) => {
                                                             const isAnswer = opt === q.answer;
                                                             const hidden = hideAnswers[q.id];

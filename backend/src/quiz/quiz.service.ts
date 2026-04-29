@@ -70,14 +70,19 @@ export class QuizService {
         );
 
         const allQuestions: any[] = [];
+        const seenQuestions = new Set<string>();
         questionSnaps.forEach((snap) => {
             snap.docs.forEach((d) => {
                 const data = d.data() as Record<string, any>;
+                // Deduplicate by question text to handle re-uploads
+                if (seenQuestions.has(data.question)) return;
+                seenQuestions.add(data.question);
                 allQuestions.push({ id: d.id, ...data, options: shuffle(data.options || []) });
             });
         });
 
-        return shuffle(allQuestions);
+        // TEMP: hardcode max 120 questions for all-seasons quiz (remove after DB rebuild)
+        return shuffle(allQuestions).slice(0, 120);
     }
 
     async getLearnData(showId: string) {
@@ -162,7 +167,7 @@ export class QuizService {
             };
         });
 
-        const total = questionsMap.size;
+        const total = dto.answers.length; // Use submitted answer count, not DB total (which may include duplicates)
         const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
         const userData = (userDoc.data() as Record<string, any>) || {};
 

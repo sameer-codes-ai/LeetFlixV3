@@ -42,6 +42,8 @@ export interface SubmitAnswer {
 
 export interface AttemptResult {
     attemptId: string;
+    seasonId?: string;
+    showId?: string;
     score: number;
     total: number;
     percentage: number;

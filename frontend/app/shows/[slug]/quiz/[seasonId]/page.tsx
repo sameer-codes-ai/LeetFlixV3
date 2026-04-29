@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/auth-context';
 import { CheckCircle, XCircle, Flag } from 'lucide-react';
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-const TIMER_DURATION = 30;
+const TIMER_DURATION = 45;
 const AUTO_ADVANCE_DELAY = 1500;
 
 // ─── Inner component uses useSearchParams ──────────────────────────────────────
@@ -30,10 +30,18 @@ function QuizContent() {
     const [justSelected, setJustSelected] = useState<string | null>(null);
     const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const totalTime = useRef(0); // accumulates time spent
+    const fetchedRef = useRef(false); // prevent double-fetch on auth update
     const isCombined = seasonId === 'all';
 
+    // Auth guard — redirect to login if not authenticated
     useEffect(() => {
-        if (!user) { router.push('/login'); return; }
+        if (!user) router.push('/login');
+    }, [user, router]);
+
+    // Fetch questions ONCE (not on auth changes)
+    useEffect(() => {
+        if (!user || fetchedRef.current) return;
+        fetchedRef.current = true;
         const fetchPromise = isCombined
             ? quizApi.getAllShowQuestions(showId)
             : quizApi.getQuestions(seasonId);
@@ -41,7 +49,7 @@ function QuizContent() {
             .then(res => { setQuestions(res.data); setTimerActive(true); })
             .catch(() => router.push('/'))
             .finally(() => setLoading(false));
-    }, [seasonId, showId, user]);
+    }, [seasonId, showId, user, isCombined, router]);
 
     useEffect(() => {
         if (!timerActive || loading || justSelected) return;

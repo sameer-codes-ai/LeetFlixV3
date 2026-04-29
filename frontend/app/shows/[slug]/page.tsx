@@ -45,7 +45,7 @@ export default function ShowPage() {
     return (
         <div style={{ minHeight: '100vh' }}>
             {/* ===== HERO BANNER (60-75vh) — matches reference exactly ===== */}
-            <section style={{ position: 'relative', height: '65vh', width: '100%', overflow: 'hidden' }}>
+            <section className="show-hero-section" style={{ position: 'relative', height: '65vh', width: '100%', overflow: 'hidden' }}>
                 {/* Background + overlay */}
                 <div
                     style={{
@@ -59,7 +59,7 @@ export default function ShowPage() {
                     }}
                 />
                 {/* Content anchored to bottom-left */}
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '48px 80px' }}>
+                <div className="hero-detail-content" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '48px 80px' }}>
                     <div style={{ maxWidth: '700px' }}>
                         {/* Badge */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
@@ -89,7 +89,7 @@ export default function ShowPage() {
                             </p>
                         )}
                         {/* CTA Buttons */}
-                        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+                        <div className="show-cta-buttons" style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
                             {user && show.seasons && show.seasons.length > 0 && (
                                 <Link
                                     href={`/shows/${slug}/quiz/${show.seasons[0].id}?showId=${show.id}`}
@@ -171,7 +171,7 @@ export default function ShowPage() {
             </section>
 
             {/* ===== SEASONS SECTION ===== */}
-            <section style={{ padding: '48px 80px' }}>
+            <section className="section-padding" style={{ padding: '48px 80px' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,107,53,0.1)' }}>
                     <div>
                         <h2 style={{ fontSize: '28px', fontWeight: '800', color: 'white', letterSpacing: '-0.5px' }}>Available Seasons</h2>
@@ -180,7 +180,7 @@ export default function ShowPage() {
                 </div>
 
                 {/* 4-column season grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
+                <div className="seasons-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
                     {(!show.seasons || show.seasons.length === 0) ? (
                         <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px', color: '#4a5e4a' }}>
                             No seasons uploaded yet.

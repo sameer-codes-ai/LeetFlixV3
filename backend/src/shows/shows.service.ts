@@ -18,20 +18,33 @@ export class ShowsService {
         if (cached) return cached;
 
         const db = this.firebaseService.getDb();
-        const [showsSnap, seasonsSnap] = await Promise.all([
+        const [showsSnap, seasonsSnap, questionsSnap] = await Promise.all([
             db.collection('shows').get(),
             db.collection('seasons').get(),
+            db.collection('questions').get(),
         ]);
 
         const shows = showsSnap.docs
             .map((d) => ({ id: d.id, ...d.data() }))
             .sort((a: any, b: any) => a.name.localeCompare(b.name));
 
+        // Count actual questions per season (deduplicated by question text)
+        const questionCountBySeason: Record<string, number> = {};
+        const seenBySeasonAll: Record<string, Set<string>> = {};
+        questionsSnap.docs.forEach((d) => {
+            const data = d.data();
+            const sid = data.seasonId;
+            if (!seenBySeasonAll[sid]) seenBySeasonAll[sid] = new Set();
+            if (seenBySeasonAll[sid].has(data.question)) return;
+            seenBySeasonAll[sid].add(data.question);
+            questionCountBySeason[sid] = (questionCountBySeason[sid] || 0) + 1;
+        });
+
         const seasonsByShowId: Record<string, any[]> = {};
         seasonsSnap.docs.forEach((doc) => {
             const data = doc.data();
             if (!seasonsByShowId[data.showId]) seasonsByShowId[data.showId] = [];
-            seasonsByShowId[data.showId].push({ id: doc.id, ...data });
+            seasonsByShowId[data.showId].push({ id: doc.id, ...data, questionCount: questionCountBySeason[doc.id] || 0 });
         });
 
         const result = shows.map((show: any) => ({
@@ -60,14 +73,26 @@ export class ShowsService {
         const showDoc = snap.docs[0];
         const show = { id: showDoc.id, ...showDoc.data() };
 
-        const seasonsSnap = await db
-            .collection('seasons')
-            .where('showId', '==', showDoc.id)
-            .get();
+        const [seasonsSnap, questionsSnap] = await Promise.all([
+            db.collection('seasons').where('showId', '==', showDoc.id).get(),
+            db.collection('questions').where('showId', '==', showDoc.id).get(),
+        ]);
+
+        // Count actual questions per season (deduplicated by question text)
+        const questionCountBySeason: Record<string, number> = {};
+        const seenBySeason: Record<string, Set<string>> = {};
+        questionsSnap.docs.forEach((d) => {
+            const data = d.data();
+            const sid = data.seasonId;
+            if (!seenBySeason[sid]) seenBySeason[sid] = new Set();
+            if (seenBySeason[sid].has(data.question)) return;
+            seenBySeason[sid].add(data.question);
+            questionCountBySeason[sid] = (questionCountBySeason[sid] || 0) + 1;
+        });
 
         const seasons = seasonsSnap.docs
-            .map((d) => ({ id: d.id, ...d.data() }))
-            .sort((a: any, b: any) => a.order - b.order);
+            .map((d) => ({ id: d.id, ...d.data(), questionCount: questionCountBySeason[d.id] || 0 }))
+            .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
         const result = { ...show, seasons };
         await this.cache.set(cacheKey, result, 120000);

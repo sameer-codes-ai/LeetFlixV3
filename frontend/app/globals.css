@@ -511,14 +511,22 @@ body {
    =================================================================== */
 
 /* --- Utility: responsive section padding --- */
-.section-padding  { padding-left: 80px; padding-right: 80px; }
-.container-main   { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+.section-padding {
+  padding-left: 80px;
+  padding-right: 80px;
+}
+
+.container-main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
 
 /* --- Mobile nav toggle (hidden on desktop) --- */
 .nav-toggle {
   display: none;
   background: none;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   padding: 6px 10px;
   color: var(--text-primary);
@@ -537,13 +545,16 @@ body {
   background: rgba(8, 12, 8, 0.97);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255,107,53,0.1);
+  border-bottom: 1px solid rgba(255, 107, 53, 0.1);
   padding: 16px 24px;
   z-index: 99;
   flex-direction: column;
   gap: 8px;
 }
-.nav-mobile-panel.open { display: flex; }
+
+.nav-mobile-panel.open {
+  display: flex;
+}
 
 .nav-mobile-panel a,
 .nav-mobile-panel button {
@@ -558,26 +569,38 @@ body {
   transition: background 0.2s;
   text-align: left;
 }
+
 .nav-mobile-panel a:hover,
 .nav-mobile-panel button:hover {
-  background: rgba(255,107,53,0.08);
+  background: rgba(255, 107, 53, 0.08);
   color: #ff6b35;
 }
 
 /* ===== TABLET LANDSCAPE (≤1024) ===== */
 @media (max-width: 1024px) {
-  .section-padding { padding-left: 48px; padding-right: 48px; }
+  .section-padding {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
 }
 
 /* ===== TABLET PORTRAIT (≤768) ===== */
 @media (max-width: 768px) {
-  .section-padding { padding-left: 20px; padding-right: 20px; }
+  .section-padding {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
 
   /* --- Navbar: show hamburger, hide desktop links & search --- */
-  .nav-toggle { display: flex; }
+  .nav-toggle {
+    display: flex;
+  }
+
   .nav-desktop-links,
   .nav-desktop-auth,
-  .nav-desktop-search { display: none !important; }
+  .nav-desktop-search {
+    display: none !important;
+  }
 
   /* --- Home: hero featured grid → single column --- */
   .hero-featured-grid {
@@ -607,12 +630,16 @@ body {
   .leaderboard-row {
     grid-template-columns: 50px 1fr 90px !important;
   }
-  .leaderboard-quizzes { display: none !important; }
+
+  .leaderboard-quizzes {
+    display: none !important;
+  }
 
   /* --- Profile sidebar → hidden, content full width --- */
   .profile-layout {
     flex-direction: column !important;
   }
+
   .profile-sidebar {
     width: 100% !important;
     max-width: 100% !important;
@@ -623,6 +650,7 @@ body {
     border-bottom: 1px solid var(--border) !important;
     padding: 12px 20px !important;
   }
+
   .profile-content {
     width: 100% !important;
     padding: 20px !important;
@@ -652,7 +680,10 @@ body {
 
 /* ===== PHONE (≤480) ===== */
 @media (max-width: 480px) {
-  .section-padding { padding-left: 16px; padding-right: 16px; }
+  .section-padding {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 
   /* --- Hero text smaller --- */
   .hero-section h1 {
@@ -671,6 +702,7 @@ body {
     flex-direction: column !important;
     width: 100%;
   }
+
   .hero-buttons a {
     width: 100% !important;
     justify-content: center !important;
@@ -691,7 +723,10 @@ body {
     -ms-overflow-style: none;
     padding-bottom: 4px;
   }
-  .filter-tabs::-webkit-scrollbar { display: none; }
+
+  .filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
 
   /* --- Results footer stats --- */
   .results-stats-footer {
@@ -706,8 +741,147 @@ body {
   }
 
   /* --- Buttons: slightly smaller --- */
-  .btn-primary, .btn-secondary, .btn-violet {
+  .btn-primary,
+  .btn-secondary,
+  .btn-violet {
     padding: 10px 18px;
     font-size: 13px;
+  }
+}
+
+/* ===== MOBILE-WIDE (≤768) — show detail & quiz layout fixes ===== */
+@media (max-width: 768px) {
+
+  /* --- Show detail hero: reduce padding --- */
+  .hero-detail-content {
+    padding: 24px 20px !important;
+  }
+
+  .hero-detail-content h1 {
+    font-size: clamp(28px, 8vw, 48px) !important;
+    letter-spacing: -1px !important;
+  }
+
+  .hero-detail-content p {
+    font-size: 14px !important;
+  }
+
+  /* --- Show hero section height → shorter on mobile --- */
+  .show-hero-section {
+    height: 50vh !important;
+    min-height: 300px !important;
+  }
+
+  /* --- Season cards grid → 2 columns --- */
+  .seasons-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* --- Season card aspect ratio: shorter on mobile --- */
+  .season-cover {
+    aspect-ratio: 1/1 !important;
+  }
+
+  /* --- Quiz header: compact --- */
+  .quiz-header {
+    padding: 12px 16px !important;
+  }
+
+  .quiz-header span {
+    font-size: 14px !important;
+  }
+
+  /* --- Quiz options: less padding --- */
+  .quiz-option-btn {
+    padding: 14px 14px !important;
+  }
+
+  /* --- Results page: score card less padding --- */
+  .results-score-card {
+    padding: 28px 20px !important;
+  }
+
+  .results-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .results-actions a {
+    justify-content: center !important;
+    width: 100% !important;
+  }
+
+  /* --- Learn page header: compact --- */
+  .learn-header {
+    padding: 12px 16px !important;
+  }
+
+  .learn-header h1 {
+    font-size: 15px !important;
+  }
+
+  /* --- Learn question: reduce left margin --- */
+  .learn-options {
+    margin-left: 0 !important;
+  }
+
+  /* --- Forum post cards --- */
+  .forum-post-card {
+    padding: 16px !important;
+  }
+}
+
+/* ===== PHONE-ONLY (≤480) — extra compactness ===== */
+@media (max-width: 480px) {
+
+  /* --- Season cards → 1 column --- */
+  .seasons-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* --- Show detail hero: very compact --- */
+  .hero-detail-content {
+    padding: 16px 16px !important;
+  }
+
+  .hero-detail-content h1 {
+    font-size: clamp(24px, 7vw, 36px) !important;
+    margin-bottom: 8px !important;
+  }
+
+  /* --- Show CTA buttons: stack --- */
+  .show-cta-buttons {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .show-cta-buttons a,
+  .show-cta-buttons button {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+    font-size: 13px !important;
+    padding: 10px 16px !important;
+  }
+
+  /* --- Score ring: smaller --- */
+  .score-ring-wrap svg {
+    width: 120px !important;
+    height: 120px !important;
+  }
+
+  /* --- Quiz: full width --- */
+  .quiz-container {
+    padding: 0 12px !important;
+  }
+
+  /* --- Learn: accordion headers --- */
+  .learn-season-header {
+    padding: 14px 16px !important;
+  }
+
+  .learn-question {
+    padding: 16px !important;
   }
 }

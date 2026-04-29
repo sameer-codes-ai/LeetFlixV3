@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { quizApi } from '@/lib/api';
-import { AttemptResult } from '@/lib/types';
-import { Trophy, CheckCircle, XCircle, Home, RotateCcw } from 'lucide-react';
+import { quizApi, showsApi } from '@/lib/api';
+import { AttemptResult, Show } from '@/lib/types';
+import { Trophy, CheckCircle, XCircle, Home, RotateCcw, ArrowLeft } from 'lucide-react';
 
 function ScoreRing({ percentage }: { percentage: number }) {
     const size = 160;
@@ -67,12 +67,23 @@ export default function ResultsPage() {
     const params = useParams();
     const attemptId = params.attemptId as string;
     const [result, setResult] = useState<AttemptResult | null>(null);
+    const [show, setShow] = useState<Show | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         quizApi
             .getAttempt(attemptId)
-            .then((res) => setResult(res.data))
+            .then(async (res) => {
+                setResult(res.data);
+                // Fetch show data to get slug for navigation links
+                if (res.data.showId) {
+                    try {
+                        const allShows = await showsApi.getAll();
+                        const found = allShows.data.find((s: Show) => s.id === res.data.showId);
+                        if (found) setShow(found);
+                    } catch { }
+                }
+            })
             .catch(() => { })
             .finally(() => setLoading(false));
     }, [attemptId]);
@@ -101,6 +112,12 @@ export default function ResultsPage() {
                 : result.percentage >= 40
                     ? { label: 'Keep Practicing 💪', color: 'var(--accent-yellow)' }
                     : { label: 'Try Again 🔄', color: 'var(--accent-red)' };
+
+    // Build navigation URLs
+    const retakeUrl = result.seasonId && result.showId
+        ? `/shows/${show?.slug || 'unknown'}/quiz/${result.seasonId}?showId=${result.showId}`
+        : null;
+    const showUrl = show?.slug ? `/shows/${show.slug}` : null;
 
     return (
         <div
@@ -170,13 +187,35 @@ export default function ResultsPage() {
                 </div>
 
                 <div
+                    className="results-actions"
                     style={{
                         display: 'flex',
-                        gap: '12px',
+                        gap: '10px',
                         justifyContent: 'center',
                         marginTop: '32px',
+                        flexWrap: 'wrap',
                     }}
                 >
+                    {retakeUrl && (
+                        <Link
+                            href={retakeUrl}
+                            className="btn-primary"
+                            style={{ textDecoration: 'none' }}
+                        >
+                            <RotateCcw size={16} />
+                            Retake Quiz
+                        </Link>
+                    )}
+                    {showUrl && (
+                        <Link
+                            href={showUrl}
+                            className="btn-secondary"
+                            style={{ textDecoration: 'none' }}
+                        >
+                            <ArrowLeft size={16} />
+                            Back to Show
+                        </Link>
+                    )}
                     <Link
                         href="/"
                         className="btn-secondary"
@@ -187,7 +226,7 @@ export default function ResultsPage() {
                     </Link>
                     <Link
                         href="/leaderboard"
-                        className="btn-primary"
+                        className="btn-secondary"
                         style={{ textDecoration: 'none' }}
                     >
                         <Trophy size={16} />
