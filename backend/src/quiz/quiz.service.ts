@@ -81,8 +81,7 @@ export class QuizService {
             });
         });
 
-        // TEMP: hardcode max 120 questions for all-seasons quiz (remove after DB rebuild)
-        return shuffle(allQuestions).slice(0, 120);
+        return shuffle(allQuestions);
     }
 
     async getLearnData(showId: string) {
