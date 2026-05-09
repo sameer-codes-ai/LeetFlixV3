@@ -812,19 +812,7 @@ body {
     width: 100% !important;
   }
 
-  /* --- Learn page header: compact --- */
-  .learn-header {
-    padding: 12px 16px !important;
-  }
 
-  .learn-header h1 {
-    font-size: 15px !important;
-  }
-
-  /* --- Learn question: reduce left margin --- */
-  .learn-options {
-    margin-left: 0 !important;
-  }
 
   /* --- Forum post cards --- */
   .forum-post-card {
@@ -876,12 +864,5 @@ body {
     padding: 0 12px !important;
   }
 
-  /* --- Learn: accordion headers --- */
-  .learn-season-header {
-    padding: 14px 16px !important;
-  }
 
-  .learn-question {
-    padding: 16px !important;
-  }
 }
