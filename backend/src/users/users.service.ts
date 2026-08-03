@@ -34,10 +34,7 @@ export class UsersService {
 
         const attempts = attemptsSnap.docs
             .map((d) => ({ id: d.id, ...d.data() } as any))
-            .sort(
-                (a, b) =>
-                    new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime(),
-            )
+            .sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''))
             .slice(0, 20);
 
         return {

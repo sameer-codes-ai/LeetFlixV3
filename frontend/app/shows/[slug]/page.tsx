@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { showsApi } from '@/lib/api';
@@ -29,6 +29,17 @@ export default function ShowPage() {
             .catch(() => router.push('/'))
             .finally(() => setLoading(false));
     }, [slug]);
+
+    const sortedSeasons = useMemo(() => {
+        if (!show?.seasons) return [];
+        return [...show.seasons].sort((a, b) => {
+            const orderDiff = (a.order || 0) - (b.order || 0);
+            if (orderDiff !== 0) return orderDiff;
+            const numA = parseInt(a.name.replace(/\D/g, '')) || 0;
+            const numB = parseInt(b.name.replace(/\D/g, '')) || 0;
+            return numA - numB;
+        });
+    }, [show]);
 
     if (loading) return (
         <div>
@@ -164,19 +175,11 @@ export default function ShowPage() {
 
                 {/* 4-column season grid */}
                 <div className="seasons-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
-                    {(!show.seasons || show.seasons.length === 0) ? (
+                    {sortedSeasons.length === 0 ? (
                         <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px', color: '#4a5e4a' }}>
                             No seasons uploaded yet.
                         </div>
-                    ) : show.seasons.sort((a, b) => {
-                        // Primary: sort by order field
-                        const orderDiff = (a.order || 0) - (b.order || 0);
-                        if (orderDiff !== 0) return orderDiff;
-                        // Fallback: extract numbers from name (e.g., "Week 1", "Season 2")
-                        const numA = parseInt(a.name.replace(/\D/g, '')) || 0;
-                        const numB = parseInt(b.name.replace(/\D/g, '')) || 0;
-                        return numA - numB;
-                    }).map((season, idx) => {
+                    ) : sortedSeasons.map((season, idx) => {
                         const [g1, g2] = GRADIENT_COVERS[idx % GRADIENT_COVERS.length];
                         return (
                             <div

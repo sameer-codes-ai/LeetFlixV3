@@ -13,37 +13,41 @@ function ActivityHeatmap({ activity, year }: { activity: Record<string, number>;
     const GAP = 3;
     const STEP = CELL + GAP;
 
-    const startDate = new Date(`${year}-01-01T00:00:00`);
-    const endDate = new Date(`${year}-12-31T00:00:00`);
+    const { weeks, monthLabels } = useMemo(() => {
+        const startDate = new Date(`${year}-01-01T00:00:00`);
+        const endDate = new Date(`${year}-12-31T00:00:00`);
 
-    const gridStart = new Date(startDate);
-    gridStart.setDate(gridStart.getDate() - gridStart.getDay());
+        const gridStart = new Date(startDate);
+        gridStart.setDate(gridStart.getDate() - gridStart.getDay());
 
-    const weeks: { date: string; count: number; inYear: boolean }[][] = [];
-    let cur = new Date(gridStart);
-    while (cur <= endDate) {
-        const week: { date: string; count: number; inYear: boolean }[] = [];
-        for (let d = 0; d < 7; d++) {
-            const ds = cur.toISOString().split('T')[0];
-            const inYear = cur >= startDate && cur <= endDate;
-            week.push({ date: ds, count: activity[ds] || 0, inYear });
-            cur.setDate(cur.getDate() + 1);
-        }
-        weeks.push(week);
-    }
-
-    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const monthLabels: { label: string; col: number }[] = [];
-    weeks.forEach((week, wi) => {
-        week.forEach(cell => {
-            if (!cell.inYear) return;
-            const d = new Date(cell.date + 'T00:00:00');
-            if (d.getDate() === 1) {
-                const last = monthLabels[monthLabels.length - 1];
-                if (!last || wi - last.col >= 3) monthLabels.push({ label: MONTHS[d.getMonth()], col: wi });
+        const weeksArr: { date: string; count: number; inYear: boolean }[][] = [];
+        let cur = new Date(gridStart);
+        while (cur <= endDate) {
+            const week: { date: string; count: number; inYear: boolean }[] = [];
+            for (let d = 0; d < 7; d++) {
+                const ds = cur.toISOString().split('T')[0];
+                const inYear = cur >= startDate && cur <= endDate;
+                week.push({ date: ds, count: activity[ds] || 0, inYear });
+                cur.setDate(cur.getDate() + 1);
             }
+            weeksArr.push(week);
+        }
+
+        const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const monthLabelsArr: { label: string; col: number }[] = [];
+        weeksArr.forEach((week, wi) => {
+            week.forEach((cell) => {
+                if (!cell.inYear) return;
+                const d = new Date(cell.date + 'T00:00:00');
+                if (d.getDate() === 1) {
+                    const last = monthLabelsArr[monthLabelsArr.length - 1];
+                    if (!last || wi - last.col >= 3) monthLabelsArr.push({ label: MONTHS[d.getMonth()], col: wi });
+                }
+            });
         });
-    });
+
+        return { weeks: weeksArr, monthLabels: monthLabelsArr };
+    }, [activity, year]);
 
     const getColor = (count: number, inYear: boolean) => {
         if (!inYear) return 'transparent';

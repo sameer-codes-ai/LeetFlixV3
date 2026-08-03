@@ -5,6 +5,7 @@ import {
 import { FirebaseService } from '../firebase/firebase.service';
 import { ShowsService } from '../shows/shows.service';
 import { v4 as uuidv4 } from 'uuid';
+import { FieldValue } from 'firebase-admin/firestore';
 
 interface QuizEntry {
     showName: string;
@@ -63,12 +64,13 @@ export class AdminService {
             }
         });
 
-        // Process in Firestore batch chunks of 499
-        const BATCH_SIZE = 499;
-
         const showIdCache: Record<string, string> = {};
         const seasonIdCache: Record<string, string> = {};
         const seasonCountIncrement: Record<string, number> = {};
+        // Cache existing questions per season to allow O(1) duplicate checks
+        const existingQuestionsBySeason: Record<string, Set<string>> = {};
+
+        const BATCH_SIZE = 499;
 
         for (let i = 0; i < valid.length; i += BATCH_SIZE) {
             const chunk = valid.slice(i, i + BATCH_SIZE);
@@ -76,7 +78,7 @@ export class AdminService {
 
             for (const { entry, idx } of chunk) {
                 try {
-                    // Get/create show — pass posterUrl so it gets stored on the show document
+                    // Get/create show
                     if (!showIdCache[entry.showName]) {
                         showIdCache[entry.showName] =
                             await this.showsService.getOrCreateShow(
@@ -84,7 +86,6 @@ export class AdminService {
                                 entry.posterUrl,
                             );
                     } else if (entry.posterUrl) {
-                        // Update posterUrl if provided in a later entry for same show
                         await this.showsService.updateShowPoster(
                             showIdCache[entry.showName],
                             entry.posterUrl,
@@ -100,15 +101,25 @@ export class AdminService {
                     }
                     const seasonId = seasonIdCache[cacheKey];
 
-                    // Check for duplicate questions
-                    const dupSnap = await db
-                        .collection('questions')
-                        .where('seasonId', '==', seasonId)
-                        .where('question', '==', entry.question)
-                        .limit(1)
-                        .get();
+                    // Pre-fetch questions for this season once if not cached yet
+                    if (!existingQuestionsBySeason[seasonId]) {
+                        const existingSnap = await db
+                            .collection('questions')
+                            .where('seasonId', '==', seasonId)
+                            .select('question')
+                            .get();
+                        const questionSet = new Set<string>();
+                        existingSnap.docs.forEach((doc) => {
+                            const qText = doc.data().question;
+                            if (qText) questionSet.add(qText);
+                        });
+                        existingQuestionsBySeason[seasonId] = questionSet;
+                    }
 
-                    if (!dupSnap.empty) {
+                    const questionSet = existingQuestionsBySeason[seasonId];
+
+                    // O(1) memory lookup for duplicate questions instead of network call
+                    if (questionSet.has(entry.question)) {
                         result.failed++;
                         result.errors.push({
                             index: idx,
@@ -118,7 +129,9 @@ export class AdminService {
                         continue;
                     }
 
-                    // Add question
+                    // Add question to set to prevent duplicates within the same bulk upload batch
+                    questionSet.add(entry.question);
+
                     const qId = uuidv4();
                     batch.set(db.collection('questions').doc(qId), {
                         id: qId,
@@ -147,16 +160,17 @@ export class AdminService {
             await batch.commit();
         }
 
-        // Update question counts on seasons
-        const countBatch = db.batch();
-        for (const [seasonId, increment] of Object.entries(seasonCountIncrement)) {
-            const seasonRef = db.collection('seasons').doc(seasonId);
-            const seasonDoc = await seasonRef.get();
-            countBatch.update(seasonRef, {
-                questionCount: (seasonDoc.data()?.questionCount || 0) + increment,
-            });
+        // Update question counts on seasons atomically with FieldValue.increment
+        if (Object.keys(seasonCountIncrement).length > 0) {
+            const countBatch = db.batch();
+            for (const [seasonId, increment] of Object.entries(seasonCountIncrement)) {
+                const seasonRef = db.collection('seasons').doc(seasonId);
+                countBatch.update(seasonRef, {
+                    questionCount: FieldValue.increment(increment),
+                });
+            }
+            await countBatch.commit();
         }
-        await countBatch.commit();
 
         return result;
     }
@@ -189,9 +203,9 @@ export class AdminService {
                 return { id: d.id, ...user };
             })
             .sort((a: any, b: any) => {
-                if (!a.createdAt) return 1;
-                if (!b.createdAt) return -1;
-                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                const dateA = a.createdAt || '';
+                const dateB = b.createdAt || '';
+                return dateB.localeCompare(dateA);
             });
     }
 

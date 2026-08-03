@@ -21,7 +21,7 @@ export class ShowsService {
         const [showsSnap, seasonsSnap, questionsSnap] = await Promise.all([
             db.collection('shows').get(),
             db.collection('seasons').get(),
-            db.collection('questions').get(),
+            db.collection('questions').select('seasonId', 'question').get(),
         ]);
 
         const shows = showsSnap.docs
@@ -75,7 +75,7 @@ export class ShowsService {
 
         const [seasonsSnap, questionsSnap] = await Promise.all([
             db.collection('seasons').where('showId', '==', showDoc.id).get(),
-            db.collection('questions').where('showId', '==', showDoc.id).get(),
+            db.collection('questions').where('showId', '==', showDoc.id).select('seasonId', 'question').get(),
         ]);
 
         // Count actual questions per season (deduplicated by question text)

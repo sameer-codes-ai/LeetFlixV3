@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { showsApi } from '@/lib/api';
 import { Show } from '@/lib/types';
@@ -65,22 +65,28 @@ function ShowCard({ show, index }: { show: Show; index: number }) {
 
 export default function HomePage() {
   const [shows, setShows] = useState<Show[]>([]);
-  const [filtered, setFiltered] = useState<Show[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const { user } = useAuth();
 
   useEffect(() => {
     showsApi.getAll()
-      .then((res) => { setShows(res.data); setFiltered(res.data); })
+      .then((res) => { setShows(res.data); })
       .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => {
-    if (!search.trim()) { setFiltered(shows); }
-    else { setFiltered(shows.filter(s => s.name.toLowerCase().includes(search.toLowerCase()))); }
-  }, [search, shows]);
+  const filtered = useMemo(() => {
+    if (!search.trim()) return shows;
+    const q = search.toLowerCase();
+    return shows.filter((s) => s.name.toLowerCase().includes(q));
+  }, [shows, search]);
+
+  const newestShows = useMemo(() => {
+    return [...shows]
+      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+      .slice(0, 2);
+  }, [shows]);
 
   return (
     <div>
@@ -120,7 +126,7 @@ export default function HomePage() {
       ) : (
         <header className="section-padding" style={{ paddingTop: '40px', paddingBottom: 0, marginBottom: '40px' }}>
           <div className="hero-featured-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            {[...shows].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 2).map((show, idx) => {
+            {newestShows.map((show, idx) => {
               const seasonCount = show.seasons?.length ?? 0;
               return (
                 <Link href={`/shows/${show.slug}`} key={show.id} style={{ position: 'relative', height: '45vh', minHeight: '340px', borderRadius: '16px', overflow: 'hidden', display: 'block', textDecoration: 'none' }}>

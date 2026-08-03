@@ -31,17 +31,16 @@ export class QuizService {
         const cacheKey = `quiz:season:${seasonId}:structure`; // structure (no shuffled answers)
         const db = this.firebaseService.getDb();
 
-        // Always verify season exists (lightweight single-doc fetch)
-        const seasonDoc = await db.collection('seasons').doc(seasonId).get();
-        if (!seasonDoc.exists) throw new NotFoundException('Season not found');
-
         // Fetch questions — cache the raw list, shuffle on the way out
         let rawQuestions = await this.cache.get<any[]>(cacheKey);
         if (!rawQuestions) {
-            const questionsSnap = await db
-                .collection('questions')
-                .where('seasonId', '==', seasonId)
-                .get();
+            const [seasonDoc, questionsSnap] = await Promise.all([
+                db.collection('seasons').doc(seasonId).get(),
+                db.collection('questions').where('seasonId', '==', seasonId).get(),
+            ]);
+
+            if (!seasonDoc.exists) throw new NotFoundException('Season not found');
+
             rawQuestions = questionsSnap.docs.map((d) => {
                 const data = d.data() as Record<string, any>;
                 return { id: d.id, ...data };
@@ -223,10 +222,7 @@ export class QuizService {
 
         return snap.docs
             .map((d) => ({ id: d.id, ...d.data() } as any))
-            .sort(
-                (a, b) =>
-                    new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime(),
-            )
+            .sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''))
             .slice(0, 50);
     }
 

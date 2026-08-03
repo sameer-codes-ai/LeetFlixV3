@@ -58,10 +58,9 @@ export class SocialService {
         const followerIds = snap.docs.map((d) => d.data().followerId as string);
         if (followerIds.length === 0) return [];
 
-        // Fetch user data for each follower
-        const userDocs = await Promise.all(
-            followerIds.map((id) => db.collection('users').doc(id).get()),
-        );
+        // Fetch user data for all followers in a single batch RPC
+        const userRefs = followerIds.map((id) => db.collection('users').doc(id));
+        const userDocs = await db.getAll(...userRefs);
         return userDocs
             .filter((d) => d.exists)
             .map((d) => {
@@ -80,9 +79,8 @@ export class SocialService {
         const followingIds = snap.docs.map((d) => d.data().followingId as string);
         if (followingIds.length === 0) return [];
 
-        const userDocs = await Promise.all(
-            followingIds.map((id) => db.collection('users').doc(id).get()),
-        );
+        const userRefs = followingIds.map((id) => db.collection('users').doc(id));
+        const userDocs = await db.getAll(...userRefs);
         return userDocs
             .filter((d) => d.exists)
             .map((d) => {

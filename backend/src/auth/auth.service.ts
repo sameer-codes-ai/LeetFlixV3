@@ -21,24 +21,15 @@ export class AuthService {
     async register(dto: RegisterDto) {
         const db = this.firebaseService.getDb();
 
-        // Check if email already exists
-        const emailSnap = await db
-            .collection('users')
-            .where('email', '==', dto.email)
-            .limit(1)
-            .get();
+        // Check if email or username already exists in parallel
+        const [emailSnap, usernameSnap] = await Promise.all([
+            db.collection('users').where('email', '==', dto.email).limit(1).get(),
+            db.collection('users').where('username', '==', dto.username).limit(1).get(),
+        ]);
 
         if (!emailSnap.empty) {
             throw new ConflictException('Email already registered');
         }
-
-        // Check if username taken
-        const usernameSnap = await db
-            .collection('users')
-            .where('username', '==', dto.username)
-            .limit(1)
-            .get();
-
         if (!usernameSnap.empty) {
             throw new ConflictException('Username already taken');
         }

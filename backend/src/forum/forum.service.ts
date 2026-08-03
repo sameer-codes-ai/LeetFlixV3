@@ -25,9 +25,7 @@ export class ForumService {
 
         return snap.docs
             .map((d: any) => ({ id: d.id, ...d.data() }))
-            .sort((a: any, b: any) =>
-                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-            )
+            .sort((a: any, b: any) => (b.createdAt || '').localeCompare(a.createdAt || ''))
             .slice(0, limit);
     }
 
@@ -44,10 +42,7 @@ export class ForumService {
 
         const comments = commentsSnap.docs
             .map((d) => ({ id: d.id, ...d.data() } as any))
-            .sort(
-                (a, b) =>
-                    new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-            );
+            .sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
 
         return { id: doc.id, ...doc.data(), comments };
     }
