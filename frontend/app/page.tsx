@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
-import { showsApi } from '@/lib/api';
+import { showsApi, leaderboardApi } from '@/lib/api';
 import { Show } from '@/lib/types';
 import { useAuth } from '@/lib/auth-context';
 import { Search } from 'lucide-react';
@@ -29,31 +29,32 @@ function ShowCard({ show, index }: { show: Show; index: number }) {
       <div
         style={{
           borderRadius: '12px', overflow: 'hidden',
-          border: `1px solid ${hovered ? 'rgba(255,107,53,0.5)' : 'rgba(255,255,255,0.06)'}`,
-          background: '#162418',
-          transition: 'border-color 0.25s, transform 0.25s',
+          border: `1px solid ${hovered ? 'var(--primary-border)' : 'var(--border)'}`,
+          background: 'var(--bg-surface)',
+          transition: 'border-color 0.25s, transform 0.25s, box-shadow 0.25s',
           transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+          boxShadow: hovered ? 'var(--primary-glow)' : 'none',
           cursor: 'pointer',
         }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <div style={{ position: 'relative', aspectRatio: '2/3', overflow: 'hidden', background: `linear-gradient(145deg, ${g1}40, ${g2}60)` }}>
+        <div style={{ position: 'relative', aspectRatio: '2/3', overflow: 'hidden', background: `linear-gradient(145deg, ${g1}20, ${g2}30)` }}>
           {show.posterUrl ? (
             <img src={show.posterUrl} alt={show.name}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: hovered ? 'scale(1.1)' : 'scale(1)', transition: 'transform 0.5s' }} />
           ) : (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '72px', fontWeight: '900', color: 'rgba(255,255,255,0.18)', userSelect: 'none' }}>{initial}</span>
+              <span style={{ fontSize: '72px', fontWeight: '900', color: 'rgba(0,0,0,0.05)', userSelect: 'none' }}>{initial}</span>
             </div>
           )}
-          <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(15,26,15,0.8)', backdropFilter: 'blur(8px)', padding: '2px 8px', borderRadius: '4px', fontSize: '9px', fontWeight: '900', color: '#ff6b35', border: '1px solid rgba(255,107,53,0.3)', textTransform: 'uppercase' }}>
+          <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', padding: '2px 8px', borderRadius: '4px', fontSize: '9px', fontWeight: '900', color: '#ff6b35', border: '1px solid rgba(255,107,53,0.3)', textTransform: 'uppercase' }}>
             {seasonCount > 0 ? 'New Quiz' : 'Soon'}
           </div>
         </div>
         <div style={{ padding: '12px 14px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: '700', color: hovered ? '#ff6b35' : 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', transition: 'color 0.2s', marginBottom: '2px' }}>{show.name}</h3>
-          <p style={{ fontSize: '12px', color: '#4a5e4a' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: '700', color: hovered ? '#ff6b35' : 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', transition: 'color 0.2s', marginBottom: '2px' }}>{show.name}</h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             {seasonCount > 0 ? `${seasonCount} Season${seasonCount !== 1 ? 's' : ''}` : 'Coming Soon'}
             {seasonCount > 0 ? ' · Quiz' : ''}
           </p>
@@ -65,15 +66,16 @@ function ShowCard({ show, index }: { show: Show; index: number }) {
 
 export default function HomePage() {
   const [shows, setShows] = useState<Show[]>([]);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const { user } = useAuth();
 
   useEffect(() => {
-    showsApi.getAll()
-      .then((res) => { setShows(res.data); })
-      .catch(() => { })
-      .finally(() => setLoading(false));
+    Promise.all([
+      showsApi.getAll().then((res) => setShows(res.data)).catch(() => {}),
+      leaderboardApi.getGlobal(1, 5).then((res) => setLeaderboard(res.data.leaderboard || res.data)).catch(() => {})
+    ]).finally(() => setLoading(false));
   }, []);
 
   const filtered = useMemo(() => {
@@ -92,33 +94,20 @@ export default function HomePage() {
     <div>
       {/* ===== HERO ===== */}
       {!user ? (
-        <header className="hero-section" style={{ position: 'relative', minHeight: '85vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, backgroundImage: `url('https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=2069&auto=format&fit=crop')`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.35 }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(15,26,15,0.2) 0%, rgba(15,26,15,0.55) 50%, #0f1a0f 100%)' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,107,53,0.08), transparent)' }} />
+        <header className="hero-section" style={{ position: 'relative', minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: `url('https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=2069&auto=format&fit=crop')`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.1 }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(10,10,10,0.5) 0%, var(--bg-base) 100%)' }} />
 
-          <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: '820px', padding: '0 24px' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '5px 16px', borderRadius: '999px', background: 'rgba(57,255,20,0.12)', border: '1px solid rgba(57,255,20,0.25)', marginBottom: '28px' }}>
-              <span style={{ position: 'relative', width: '8px', height: '8px', borderRadius: '50%', background: '#39ff14', display: 'inline-block', flexShrink: 0 }} />
-              <span style={{ fontSize: '11px', fontWeight: '900', letterSpacing: '2px', color: '#39ff14', textTransform: 'uppercase' }}>Live Quizzes Active Now</span>
-            </div>
-            <h1 style={{ fontSize: 'clamp(56px,9vw,100px)', fontWeight: '900', lineHeight: 1.0, letterSpacing: '-3px', color: 'white', marginBottom: '24px', paddingBottom: '8px' }}>
-              Level Up Your{' '}
-              <span style={{ fontStyle: 'italic', background: 'linear-gradient(90deg, #ff6b35, #c084fc, #39ff14)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', paddingRight: '12px' }}>Binge</span>
+          <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: '900px', padding: '0 24px' }}>
+            <h1 style={{ fontSize: 'clamp(40px,6vw,64px)', fontWeight: '600', lineHeight: 1.1, letterSpacing: '-1px', color: 'var(--text-primary)', marginBottom: '24px' }}>
+              Experience next-gen trivia with LeetFlix
             </h1>
-            <p style={{ fontSize: '18px', color: '#94a394', maxWidth: '560px', margin: '0 auto 44px', lineHeight: 1.7 }}>
-              The gamified quiz platform for TV show enthusiasts. Prove your fan status, climb the ranks, and earn exclusive badges for your favourite series.
+            <p style={{ fontSize: '16px', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto 44px', lineHeight: 1.6 }}>
+              Seamlessly blend your love for TV shows with competitive trivia for an enhanced entertainment experience in your daily life.
             </p>
             <div className="hero-buttons" style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link href="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '16px 44px', borderRadius: '12px', background: '#ff6b35', color: '#0f1a0f', fontWeight: '900', fontSize: '17px', textDecoration: 'none', boxShadow: '0 0 40px rgba(255,107,53,0.4)', transition: 'all 0.2s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.12)'; e.currentTarget.style.transform = 'scale(1.03)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; e.currentTarget.style.transform = 'scale(1)'; }}>
-                Start Playing
-              </Link>
-              <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '16px 44px', borderRadius: '12px', background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', fontWeight: '700', fontSize: '17px', textDecoration: 'none', transition: 'all 0.2s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}>
-                Explore Shows
+              <Link href="/register" className="btn-primary" style={{ padding: '12px 24px', fontSize: '14px', borderRadius: '4px', fontWeight: '500' }}>
+                Get Started
               </Link>
             </div>
           </div>
@@ -155,8 +144,8 @@ export default function HomePage() {
       <section className={user ? 'section-padding' : ''} style={{ paddingTop: 0, paddingBottom: '64px', marginTop: user ? '0' : '-40px', position: 'relative', zIndex: 10 }}>
         <div className={!user ? 'section-padding' : ''} style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h2 style={{ fontSize: '28px', fontWeight: '800', color: 'white', letterSpacing: '-0.5px' }}>{user ? 'Browse Shows' : 'Featured Series'}</h2>
-            <p style={{ color: '#4a5e4a', marginTop: '4px', fontSize: '14px' }}>Join the active quiz arenas for these trending shows</p>
+            <h2 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{user ? 'Browse Shows' : 'Featured Series'}</h2>
+            <p style={{ color: 'var(--text-secondary)', marginTop: '4px', fontSize: '14px' }}>Join the active quiz arenas for these trending shows</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ position: 'relative' }}>
@@ -185,80 +174,55 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* ===== LEADERBOARD + HEATMAP TEASER (guest only) ===== */}
+      {/* ===== REAL LEADERBOARD ===== */}
       {!user && (
         <>
-          <section className="section-padding home-two-col" style={{ paddingBottom: '80px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
-            <div style={{ background: 'rgba(255,107,53,0.03)', border: '1px solid rgba(255,107,53,0.1)', borderRadius: '24px', padding: '32px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, right: 0, padding: '32px', color: 'rgba(255,107,53,0.07)', fontSize: '120px', lineHeight: 1, pointerEvents: 'none' }}>🏆</div>
-              <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: '#ff6b35' }}>📊</span> Global Top Rank
-              </h2>
-              {[
-                { rank: '01', name: 'Alex_Vance', title: 'Master of Mystery', score: '42,900 XP', top: true },
-                { rank: '02', name: 'CinematicQueen', title: 'Drama Specialist', score: '38,150 XP', top: false },
-                { rank: '03', name: 'The_Cooker', title: 'Culinary Buff', score: '35,200 XP', top: false },
-              ].map((p) => (
-                <div key={p.rank} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderRadius: '12px', marginBottom: '10px', background: p.top ? 'rgba(255,107,53,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${p.top ? 'rgba(255,107,53,0.2)' : 'rgba(255,255,255,0.07)'}` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <span style={{ fontSize: '16px', fontWeight: '900', fontStyle: 'italic', color: p.top ? '#ff6b35' : '#4a5e4a', minWidth: '28px' }}>{p.rank}</span>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #ff6b35, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '900', border: p.top ? '2px solid #ff6b35' : 'none' }}>{p.name.charAt(0)}</div>
-                    <div>
-                      <p style={{ fontWeight: '700', color: 'white', fontSize: '14px' }}>{p.name}</p>
-                      <p style={{ fontSize: '11px', color: '#4a5e4a' }}>{p.title}</p>
+          <section className="section-padding" style={{ paddingBottom: '80px', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '800px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)' }}>
+                  <span style={{ color: '#ff6b35' }}>🏆</span> Global Top Rank
+                </h2>
+                <Link href="/leaderboard" style={{ color: '#ff6b35', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}>
+                  View Full Leaderboard →
+                </Link>
+              </div>
+              
+              {leaderboard.length === 0 ? (
+                <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>No ranking data available yet.</p>
+              ) : (
+                leaderboard.slice(0, 5).map((p: any, idx: number) => (
+                  <div key={p.userId || idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderRadius: '12px', marginBottom: '10px', background: idx === 0 ? 'rgba(255,107,53,0.05)' : 'rgba(0,0,0,0.02)', border: `1px solid ${idx === 0 ? 'rgba(255,107,53,0.2)' : 'var(--border)'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <span style={{ fontSize: '16px', fontWeight: '900', fontStyle: 'italic', color: idx === 0 ? '#ff6b35' : 'var(--text-muted)', minWidth: '28px' }}>
+                        {idx < 9 ? `0${idx + 1}` : idx + 1}
+                      </span>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #ff6b35, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '900', color: 'white', border: idx === 0 ? '2px solid #ff6b35' : 'none' }}>
+                        {(p.username || 'U').charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '14px' }}>{p.username || 'Unknown'}</p>
+                        <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{p.title || 'Player'}</p>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontWeight: '700', color: idx === 0 ? '#ff6b35' : 'var(--text-primary)', fontSize: '13px' }}>{p.totalScore || p.score || 0} XP</p>
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontWeight: '700', color: p.top ? '#ff6b35' : 'white', fontSize: '13px' }}>{p.score}</p>
-                  </div>
-                </div>
-              ))}
-              <Link href="/leaderboard" style={{ display: 'block', textAlign: 'center', marginTop: '16px', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,107,53,0.2)', color: '#ff6b35', fontSize: '13px', fontWeight: '700', textDecoration: 'none', transition: 'background 0.2s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,107,53,0.07)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
-                View Full Global Leaderboard
-              </Link>
-            </div>
-            <div style={{ background: 'rgba(139,92,246,0.03)', border: '1px solid rgba(139,92,246,0.1)', borderRadius: '24px', padding: '32px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: '#8b5cf6' }}>📈</span> Watching Activity
-              </h2>
-              <p style={{ color: '#4a5e4a', fontSize: '13px', marginBottom: '20px' }}>Track your quiz streaks and knowledge growth across all genres.</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {[...Array(7)].map((_, row) => (
-                  <div key={row} style={{ display: 'flex', gap: '4px' }}>
-                    {[...Array(20)].map((_, col) => {
-                      const intensity = Math.random();
-                      const alpha = intensity > 0.7 ? 0.9 : intensity > 0.5 ? 0.6 : intensity > 0.3 ? 0.3 : 0.1;
-                      return (
-                        <div key={col} style={{ width: '12px', height: '12px', borderRadius: '2px', background: intensity > 0.5 ? `rgba(255,107,53,${alpha})` : `rgba(139,92,246,${alpha * 0.8})` }} />
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-              <div className="stats-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '24px' }}>
-                {[{ label: 'WEEKLY STREAK', value: '14 Days' }, { label: 'TOTAL QUIZZES', value: '342 📈' }].map(stat => (
-                  <div key={stat.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '14px' }}>
-                    <p style={{ fontSize: '9px', fontWeight: '800', letterSpacing: '1.5px', color: '#4a5e4a', textTransform: 'uppercase', marginBottom: '4px' }}>{stat.label}</p>
-                    <p style={{ fontSize: '24px', fontWeight: '900', color: 'white' }}>{stat.value.split(' ')[0]} <span style={{ fontSize: '14px', fontWeight: '700', color: '#ff6b35' }}>{stat.value.split(' ')[1]}</span></p>
-                  </div>
-                ))}
-              </div>
+                ))
+              )}
             </div>
           </section>
 
           <section className="section-padding" style={{ paddingBottom: '80px' }}>
-            <div className="home-cta-section" style={{ borderRadius: '28px', overflow: 'hidden', position: 'relative', background: 'linear-gradient(135deg, #ff6b35, #c084fc)', padding: '80px', textAlign: 'center' }}>
-              <h2 style={{ fontSize: 'clamp(28px,4vw,48px)', fontWeight: '900', color: '#0f1a0f', marginBottom: '20px', maxWidth: '600px', margin: '0 auto 20px' }}>
+            <div className="home-cta-section" style={{ borderRadius: '28px', overflow: 'hidden', position: 'relative', background: 'linear-gradient(135deg, rgba(255,107,53,0.1), rgba(192,132,252,0.1))', border: '1px solid var(--border)', padding: '60px', textAlign: 'center' }}>
+              <h2 style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '16px', maxWidth: '600px', margin: '0 auto 16px' }}>
                 Ready to claim the Iron Throne of TV knowledge?
               </h2>
-              <p style={{ color: 'rgba(15,26,15,0.75)', fontSize: '16px', marginBottom: '36px', maxWidth: '500px', margin: '0 auto 36px' }}>
-                Join 50,000+ fans competing daily. New challenges added for every episode release.
+              <p style={{ color: 'var(--text-secondary)', fontSize: '16px', marginBottom: '32px', maxWidth: '500px', margin: '0 auto 32px' }}>
+                Join the fans competing daily. New challenges added for every episode release.
               </p>
-              <Link href="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 36px', borderRadius: '12px', background: '#0f1a0f', color: '#ff6b35', fontWeight: '900', fontSize: '16px', textDecoration: 'none', transition: 'transform 0.2s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.04)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}>
+              <Link href="/register" className="btn-primary" style={{ padding: '14px 36px', fontSize: '16px', color: '#fff' }}>
                 Get Early Access
               </Link>
             </div>
@@ -266,20 +230,20 @@ export default function HomePage() {
         </>
       )}
 
-      <footer className="footer-bar section-padding" style={{ borderTop: '1px solid rgba(255,107,53,0.08)', paddingTop: '40px', paddingBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.5 }}>
+      <footer className="footer-bar section-padding" style={{ borderTop: '1px solid var(--border)', paddingTop: '40px', paddingBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.7 }}>
           <span style={{ fontSize: '18px', fontWeight: '900', letterSpacing: '-0.5px', color: '#ff6b35' }}>LEETFLIX</span>
         </div>
         <div style={{ display: 'flex', gap: '24px' }}>
           {['Privacy', 'Terms', 'Contact', 'Twitter'].map(l => (
-            <a key={l} href="#" style={{ fontSize: '13px', color: '#4a5e4a', textDecoration: 'none', transition: 'color 0.2s' }}
+            <a key={l} href="#" style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none', transition: 'color 0.2s' }}
               onMouseEnter={(e) => { e.currentTarget.style.color = '#ff6b35'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#4a5e4a'; }}>
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}>
               {l}
             </a>
           ))}
         </div>
-        <p style={{ fontSize: '11px', color: '#2a3a2a', fontStyle: 'italic' }}>© 2024 LeetFlix Media Group. Stay curious.</p>
+        <p style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>© 2024 LeetFlix Media Group. Stay curious.</p>
       </footer>
     </div>
   );

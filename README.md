@@ -71,7 +71,7 @@ A premium, full-stack gamified quiz platform designed for TV show enthusiasts. T
 Double-click **`start.bat`** in the project root. It will:
 1. Open the **backend** in a separate terminal window.
 2. Open the **frontend** in a separate terminal window.
-3. Wait 3 seconds, then open `http://localhost:3000` in your browser automatically.
+3. Wait 3 seconds, then open `http://localhost:5000` in your browser automatically.
 
 ### Prerequisites
 - Node.js 18+
@@ -89,7 +89,7 @@ cp .env.example .env
 
 npm install
 npm run start:dev
-# API runs at http://localhost:3001/api
+# API runs at http://localhost:5001/api
 ```
 
 ### 2. Frontend Setup
@@ -97,7 +97,7 @@ npm run start:dev
 cd frontend
 npm install
 npm run dev
-# App runs at http://localhost:3000
+# App runs at http://localhost:5000
 ```
 
 ---

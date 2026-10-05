@@ -1,3 +1,4 @@
+import './telemetry'; // <-- MUST be the first import!
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -7,8 +8,8 @@ async function bootstrap() {
 
   // ── CORS ────────────────────────────────────────────────────────────────
   // Allow the frontend origin. Set FRONTEND_URL env var in production.
-  // Supports comma-separated list: "https://leetflix.vercel.app,http://localhost:3000"
-  const rawOrigins = process.env.FRONTEND_URL || 'http://localhost:3000';
+  // Supports comma-separated list: "https://leetflix.vercel.app,http://localhost:5000"
+  const rawOrigins = process.env.FRONTEND_URL || 'http://localhost:5000';
   const allowedOrigins = rawOrigins.split(',').map((o) => o.trim());
 
   app.enableCors({
@@ -34,7 +35,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  const port = process.env.PORT || 3001;
+  const port = process.env.PORT || 5001;
   await app.listen(port);
   console.log(`🚀 LeetFlix API running on port ${port}`);
 }

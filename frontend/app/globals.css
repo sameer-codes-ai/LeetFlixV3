@@ -7,44 +7,41 @@
 /* ===== CSS VARIABLES ===== */
 :root {
   /* Background layers */
-  --bg-base: #0f1a0f;
-  /* deepest – body (dark green tint like reference) */
-  --bg-surface: #162418;
-  /* card base */
-  --bg-elevated: #1c2e1c;
-  /* hover / raised */
+  --bg-base: #0a0a0a;
+  --bg-surface: rgba(255, 255, 255, 0.02);
+  --bg-elevated: rgba(255, 255, 255, 0.05);
 
-  /* Accent neon palette */
-  --neon-orange: #ff6b35;
-  --neon-violet: #8b5cf6;
-  --neon-green: #39ff14;
-  --neon-purple: #c084fc;
-  --neon-pink: #f472b6;
+  /* Accent palette */
+  --neon-orange: #ffffff;
+  --neon-violet: #a3a3a3;
+  --neon-green: #ffffff;
+  --neon-purple: #a3a3a3;
+  --neon-pink: #d4d4d4;
 
-  /* Primary action = orange */
-  --primary: #ff6b35;
-  --primary-dim: rgba(255, 107, 53, 0.15);
-  --primary-border: rgba(255, 107, 53, 0.30);
-  --primary-glow: 0 0 20px rgba(255, 107, 53, 0.45);
+  /* Primary action = white */
+  --primary: #ffffff;
+  --primary-dim: rgba(255, 255, 255, 0.1);
+  --primary-border: rgba(255, 255, 255, 0.2);
+  --primary-glow: 0 4px 14px rgba(255, 255, 255, 0.05);
 
-  /* Secondary action = violet */
-  --secondary: #8b5cf6;
-  --secondary-dim: rgba(139, 92, 246, 0.15);
-  --secondary-border: rgba(139, 92, 246, 0.30);
-  --secondary-glow: 0 0 20px rgba(139, 92, 246, 0.40);
+  /* Secondary action = subtle */
+  --secondary: #a3a3a3;
+  --secondary-dim: rgba(255, 255, 255, 0.05);
+  --secondary-border: rgba(255, 255, 255, 0.1);
+  --secondary-glow: none;
 
   /* Text */
-  --text-primary: #f0f4f0;
-  --text-secondary: #94a394;
-  --text-muted: #4a5e4a;
+  --text-primary: #ffffff;
+  --text-secondary: #a3a3a3;
+  --text-muted: #525252;
 
   /* Borders */
-  --border: rgba(255, 255, 255, 0.07);
-  --border-bright: rgba(255, 255, 255, 0.12);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-bright: rgba(255, 255, 255, 0.15);
 
   /* Glass */
-  --glass-bg: rgba(15, 22, 16, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-bg: rgba(10, 10, 10, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.05);
 }
 
 /* ===== RESET & BASE ===== */
@@ -66,10 +63,6 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  background-image:
-    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(255, 107, 53, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(139, 92, 246, 0.07) 0%, transparent 60%);
-  background-attachment: fixed;
 }
 
 /* ===== GLASS CARD ===== */
@@ -114,7 +107,7 @@ body {
   cursor: pointer;
   border: none;
   background: var(--primary);
-  color: #0a0d0a;
+  color: #000000;
   box-shadow: var(--primary-glow);
   transition: all 0.2s;
   text-decoration: none;
@@ -140,7 +133,7 @@ body {
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface);
   border: 1px solid var(--border-bright);
   color: var(--text-primary);
   transition: all 0.2s;
@@ -149,8 +142,8 @@ body {
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--bg-elevated);
+  border-color: var(--primary-border);
 }
 
 .btn-violet {
@@ -184,7 +177,7 @@ body {
   border-radius: 10px;
   font-size: 14px;
   font-family: inherit;
-  background: rgba(255, 255, 255, 0.04);
+  background: transparent;
   border: 1px solid var(--border-bright);
   color: var(--text-primary);
   outline: none;
@@ -465,10 +458,8 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  border-bottom: 1px solid rgba(255, 107, 53, 0.1);
-  background: rgba(8, 12, 8, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid transparent;
+  background: transparent;
 }
 
 /* ===== OPTION BUTTON (quiz) ===== */
@@ -542,10 +533,10 @@ body {
   top: 64px;
   left: 0;
   right: 0;
-  background: rgba(8, 12, 8, 0.97);
+  background: rgba(255, 255, 255, 0.97);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 107, 53, 0.1);
+  border-bottom: 1px solid var(--border);
   padding: 16px 24px;
   z-index: 99;
   flex-direction: column;
